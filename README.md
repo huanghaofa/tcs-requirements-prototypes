@@ -1,6 +1,6 @@
 # TCS 五项功能改造原型
 
-[打开在线原型](https://huanghaofa.github.io/tcs-requirements-prototypes/)
+[打开在线原型](https://huanghaofa.github.io/tcs-requirements-prototypes/index.html?preview=20261009-drawer)
 
 ## 功能入口
 
