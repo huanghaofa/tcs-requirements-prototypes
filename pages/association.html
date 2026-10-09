@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>统计报表 / 逻辑树关联配置</title>
+<link rel="icon" type="image/png" href="../assets/images/nissan-logo.png"/>
 <style>
 :root{
   --bg:#F4F3EF;--surface:#FFF;--surface2:#F9F8F5;--border:#E5E3DC;--border2:#D4D1C8;
@@ -253,8 +254,10 @@ body{font-family:'DM Sans','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-s
 }
 </style>
 <link rel="stylesheet" href="../assets/css/association-export.css"/>
+<link rel="stylesheet" href="../annotations/annotation.css"/>
+<link rel="stylesheet" href="../annotations/annotation-layout.css"/>
 </head>
-<body>
+<body class="association-prototype">
 <div class="shell">
   <aside class="sidebar">
     <div class="side-brand">
@@ -340,7 +343,7 @@ body{font-family:'DM Sans','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-s
     <input id="modal-search" class="modal-search" placeholder="搜索节点…" oninput="renderModalList()"/>
     <div class="modal-list" id="modal-list"></div>
     <div class="reserved-panel">
-      <div class="reserved-title">系统保留节点</div>
+      <div class="reserved-title" data-anno="assoc-reserved-nodes">系统保留节点</div>
       <label><input type="radio" name="reserved-node-choice" value="困扰度" onchange="toggleReserved(this)">困扰度</label>
       <label><input type="radio" name="reserved-node-choice" value="最近发生时间" onchange="toggleReserved(this)">最近发生时间</label>
     </div>
@@ -361,7 +364,7 @@ body{font-family:'DM Sans','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-s
     <div class="association-export-scroll" id="association-export-scroll"><table class="association-export-table"><thead id="association-export-head"></thead><tbody id="association-export-body"></tbody></table></div>
     <div class="association-export-pagination" id="association-export-pagination"></div>
     <footer class="association-export-footer">
-      <p>CSV 反映当前配置；Excel 样例为已制作的固定展示样例。</p>
+      <p data-anno="assoc-export-current-vs-sample">CSV 反映当前配置；Excel 样例为已制作的固定展示样例。</p>
       <div><a class="btn" href="../downloads/association-export-sample.xlsx" download="逻辑树关联配置_Excel样例.xlsx">下载 Excel 样例</a><button class="btn btn-primary" id="association-export-download" type="button">下载当前配置 CSV</button></div>
     </footer>
   </section>
@@ -968,7 +971,7 @@ function renderCascade(){
         <span class="cc-lv-badge ${LV_BADGES[lv]}">${LV_NAMES[lv]}</span>
         <span class="cc-hdr-name">题目选择</span>
       </div>
-      <div class="cc-layer-progress"><span>共 ${totalCnt} 题，</span><span>已配置 ${configuredCnt} 题，</span><span>未配置 ${totalCnt-configuredCnt} 题</span></div>
+      <div class="cc-layer-progress"${lv===0?' data-anno="assoc-layer-stats"':''}><span>共 ${totalCnt} 题，</span><span>已配置 ${configuredCnt} 题，</span><span>未配置 ${totalCnt-configuredCnt} 题</span></div>
     `;
     col.appendChild(hdr);
 
@@ -1084,7 +1087,7 @@ function toggleSelect(qId,lv){
 }
 
 // ── 模态 ──
-function openModal(qId,lv,e){
+function openModal(qId,lv,e,options){
   e&&e.stopPropagation();
   const items=getQuestionsForLayer(lv);
   const q=items.find(x=>x.id===qId);
@@ -1099,7 +1102,7 @@ function openModal(qId,lv,e){
   renderModalList();
   renderModalDetail();
   document.getElementById('modal').style.display='flex';
-  setTimeout(()=>{const ms=document.getElementById('modal-search');if(ms)ms.focus();},80);
+  if(!options||options.focus!==false)setTimeout(()=>{const ms=document.getElementById('modal-search');if(ms)ms.focus();},80);
 }
 
 function renderModalList(){
@@ -1451,6 +1454,9 @@ function saveAll(){
 }
 </script>
 <script src="../assets/js/association-export.js"></script>
+<script src="../annotations/association-config.js"></script>
+<script src="../annotations/annotations.js"></script>
+<script src="../annotations/annotation-runtime.js"></script>
 </div>
 </body>
 </html>

@@ -1,0 +1,35 @@
+/* Reserve the drawer in page and modal layouts; all assets also work offline. */
+body { --anno-drawer-width: 340px; --anno-space: 0px; }
+body.anno-b-reserved { --anno-space: var(--anno-drawer-width); }
+body.anno-b-collapsed { --anno-space: 36px; }
+.anno-panel-header { position: sticky; top: 0; z-index: 1; background: #fff; padding: 14px 16px; }
+.anno-note-link { font-size: 13px; line-height: 1.7; }
+.anno-note-title { color: #8b4c06; font-size: 14px; }
+.anno-note-detail { color: #4b5563; }
+.association-prototype .overlay,
+.association-prototype .association-export-overlay { right: var(--anno-space); }
+.association-prototype .modal { max-width: calc(100% - 24px); }
+.association-prototype .association-export-footer > div { flex-wrap: wrap; }
+.association-prototype .association-export-footer .btn { height: auto; min-height: 30px; }
+.association-prototype .topbar .btn { white-space: nowrap; flex-shrink: 0; }
+.report-prototype .shell { width: 100%; }
+@media (max-width: 1700px) {
+  .association-prototype.anno-b-reserved .topbar { height: auto; min-height: 56px; flex-wrap: wrap; padding-block: 10px; gap: 8px; }
+  .association-prototype.anno-b-reserved .topbar-actions { flex-wrap: wrap; }
+  .report-prototype.anno-b-reserved .filter-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 1100px) {
+  .report-prototype.anno-b-reserved .filter-grid { grid-template-columns: minmax(0,1fr); }
+  .report-prototype.anno-b-reserved .filter-footer,
+  .report-prototype.anno-b-reserved .result-toolbar { flex-wrap: wrap; }
+  .report-prototype.anno-b-reserved .topbar { height: auto; min-height: 64px; flex-wrap: wrap; padding-block: 10px; }
+  .report-prototype.anno-b-reserved .user { display: none; }
+}
+@media (max-width: 760px) {
+  body { --anno-drawer-width: min(320px, calc(100vw - 48px)); }
+  .association-prototype .sidebar { display: none; }
+  .report-prototype.anno-b-reserved .sidebar { width: 0; }
+  .report-prototype.anno-b-reserved .workspace { margin-left: 0; width: 100%; }
+  .report-prototype.anno-b-reserved .shell { overflow-x: auto; }
+  .report-prototype.anno-b-reserved .workspace { min-width: 300px; }
+}

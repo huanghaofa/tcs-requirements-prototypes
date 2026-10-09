@@ -148,15 +148,18 @@
         return false;
       }
     }
-    function openPreview() {
-      restoreFocus = document.activeElement;
-      page = 1; overlay.hidden = false;
+    function openPreview(options) {
+      const fromAnnotation = Boolean(options && options.annotation === true);
+      const wasOpen = !overlay.hidden;
+      if (!wasOpen || !fromAnnotation) restoreFocus = document.activeElement;
+      if (!wasOpen || !fromAnnotation) page = 1;
+      overlay.hidden = false;
       renderHead(); updateSnapshot();
-      byId('association-export-close').focus();
+      if (!fromAnnotation) byId('association-export-close').focus();
     }
-    function closePreview() {
+    function closePreview(options) {
       overlay.hidden = true;
-      if (restoreFocus && restoreFocus.isConnected) restoreFocus.focus();
+      if (!(options && options.annotation === true) && restoreFocus && restoreFocus.isConnected) restoreFocus.focus();
     }
     function downloadCsv() {
       // 每次下载重取当前配置，预览打开之后发生的变更也不会导出旧值。
@@ -175,6 +178,8 @@
       if (overlay.hidden) return;
       if (event.key === 'Escape') { event.preventDefault(); closePreview(); }
       if (event.key === 'Tab') {
+        // 标注抽屉是独立的只读阅读区，键盘操作不被预览焦点循环接管。
+        if (event.target.closest && event.target.closest('#anno-panel, #anno-reopen')) return;
         const controls = [...overlay.querySelectorAll('button:not(:disabled),a[href]')];
         const first = controls[0]; const last = controls[controls.length - 1];
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
