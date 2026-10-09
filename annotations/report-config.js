@@ -5,7 +5,7 @@
     editable: false,
     mode: 'b-drawer',
     projectId: 'tcs-ab4783e3',
-    dataVersion: '20261009-drawer-v1',
+    dataVersion: '20261009-l2-v2',
     page: 'report',
     pageTitle: '问卷报表 · 原型标注',
     revealTarget: function (annotation) {

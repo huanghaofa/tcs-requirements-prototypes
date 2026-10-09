@@ -6,7 +6,7 @@
 <link rel="icon" href="assets/images/nissan-logo.png">
 <link rel="stylesheet" href="assets/css/app.css">
 <link rel="stylesheet" href="../annotations/annotation.css">
-<link rel="stylesheet" href="../annotations/annotation-layout.css?v=20261009-drawer">
+<link rel="stylesheet" href="../annotations/annotation-layout.css?v=20261009-l2-v2">
 </head>
 <body class="report-prototype">
 <div class="shell">
@@ -20,7 +20,7 @@
 <button class="nav-group open" id="report-nav-toggle" aria-expanded="true"><span>◴</span> 统计报表 <span class="arrow">⌃</span></button>
 <div id="report-nav-items" class="nav-items">
 <div class="nav-item muted">车主统计TCS</div><div class="nav-item muted">未点评重推送推送日志</div><div class="nav-item muted">问题表明细</div><div class="nav-item muted">客户表明细</div><div class="nav-item muted">点评奖励发放日志</div><div class="nav-item muted">答题时长统计</div>
-<a class="nav-item" href="../index.html?preview=20261009-drawer">需求原型首页</a>
+<a class="nav-item" href="../index.html?preview=20261009-l2-v2">需求原型首页</a>
 <a class="nav-item" href="../pages/association.html">逻辑树关联配置</a>
 <a class="nav-item active" href="index.html" aria-current="page">问卷报表明细</a>
 </div>
@@ -28,7 +28,7 @@
 </nav>
 </aside>
 <div class="workspace">
-<header class="topbar"><button class="icon-button menu-toggle" id="sidebar-toggle" aria-label="收起侧栏" aria-expanded="true">☰</button><div class="breadcrumb">统计报表 <span>/</span> <strong>问卷报表明细</strong><a class="back-hub" href="../index.html?preview=20261009-drawer">返回功能清单</a></div><div class="user"><span class="demo-label">静态演示</span><span class="avatar">A</span><span>admin<small>超级管理员</small></span></div></header>
+<header class="topbar"><button class="icon-button menu-toggle" id="sidebar-toggle" aria-label="收起侧栏" aria-expanded="true">☰</button><div class="breadcrumb">统计报表 <span>/</span> <strong>问卷报表明细</strong><a class="back-hub" href="../index.html?preview=20261009-l2-v2">返回功能清单</a></div><div class="user"><span class="demo-label">静态演示</span><span class="avatar">A</span><span>admin<small>超级管理员</small></span></div></header>
 <main class="main">
 <section class="report-card" aria-label="问卷报表明细">
 <form id="query-form" novalidate>
@@ -51,20 +51,20 @@
 <div id="query-message" class="query-message" role="status" aria-live="polite"></div>
 <section class="logic-section" aria-label="按逻辑树筛选"><div class="logic-title">按逻辑树筛选：</div><div class="logic-body"><div class="tree-field"><label for="tree-select">逻辑树</label><select id="tree-select"><option value="tree3">业测的树3</option></select></div><div id="dim-cascade" class="dim-cascade"></div></div></section>
 </form>
-<div class="result-toolbar"><div class="result-summary">共搜索到 <strong id="result-count">0</strong> 条数据<span class="summary-detail">答卷 <b id="answer-count">0</b> 份 <i>·</i> L2 <b id="l2-count">0</b> 条 <i>·</i> L3 <b id="l3-count">0</b> 条</span></div><div class="table-actions"><button id="export-btn" class="btn primary" disabled>导出</button><button id="refresh-btn" class="icon-button" aria-label="刷新查询结果" title="刷新查询结果" disabled>↻</button><button id="density-btn" class="icon-button" aria-label="切换表格密度" title="切换表格密度">↕</button><button id="columns-btn" class="icon-button" aria-label="设置表格列" title="设置表格列" aria-expanded="false">⚙</button></div><div id="column-panel" class="column-panel" hidden></div></div>
+<div class="result-toolbar"><div class="result-summary">共搜索到 <strong id="result-count">0</strong> 条数据<span class="summary-detail">答卷 <b id="answer-count">0</b> 份 <i>·</i> 仅 L2 <b id="l2-count">0</b> 条 <i>·</i> L3 <b id="l3-count">0</b> 条</span></div><div class="table-actions"><button id="export-btn" class="btn primary" disabled>导出</button><button id="refresh-btn" class="icon-button" aria-label="刷新查询结果" title="刷新查询结果" disabled>↻</button><button id="density-btn" class="icon-button" aria-label="切换表格密度" title="切换表格密度">↕</button><button id="columns-btn" class="icon-button" aria-label="设置表格列" title="设置表格列" aria-expanded="false">⚙</button></div><div id="column-panel" class="column-panel" hidden></div></div>
 <div id="result-context" class="result-context">尚未查询</div>
 <div class="table-scroll" id="table-scroll" tabindex="0" aria-label="报表，可横向滚动查看层级列"><table id="report-table"><thead id="table-head"></thead><tbody id="table-body"><tr><td>请设置查询条件后点击“查询”</td></tr></tbody></table></div>
 <div id="pagination" class="pagination"></div>
 </section>
-<p class="preview-note">演示数据：输入问卷ID <strong>118</strong> 可查看 3 条 L2 和 3 条 L3 的拆行效果。表格可横向滚动。</p>
+<p class="preview-note">演示数据：输入问卷ID <strong>118</strong> 可查看 3 条 L3 和 1 条仅 L2 的明细，共 4 行。表格可横向滚动。</p>
 <footer class="footer"><span>车巴巴</span><span>东风日产</span><p>Copyright © 粤ICP备15053418号-1 版权所有 东风日产乘用车公司</p></footer>
 </main>
 </div>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="mock/data.js"></script><script src="js/pages/report.js"></script><script src="js/app.js"></script><script src="js/feature-entry.js"></script>
-<script src="../annotations/report-config.js"></script>
-<script src="../annotations/annotations.js"></script>
+<script src="mock/data.js"></script><script src="js/pages/report.js?v=20261009-l2-v2"></script><script src="js/app.js"></script><script src="js/feature-entry.js"></script>
+<script src="../annotations/report-config.js?v=20261009-l2-v2"></script>
+<script src="../annotations/annotations.js?v=20261009-l2-v2"></script>
 <script src="../annotations/annotation-runtime.js"></script>
 </body>
 </html>

@@ -104,14 +104,15 @@
           const childBranches = l2.l3Branches.filter(l3 => matchesNodePath(
             [...parentPath, l3.nodeId, l3.l4 ? l3.l4.nodeId : '', l3.l5 ? l3.l5.nodeId : ''], selectedNodes
           ));
-          // 演示暂定：深层筛选保留命中子题的 L2 父行，不带出无关兄弟。
-          if (!matchesNodePath(parentPath, selectedNodes) && !childBranches.length) return;
+          // 是否保留 L2 行取决于原始回答分支，不因 L3 被筛掉而补出父行。
+          const hasL3Answers = l2.l3Branches.length > 0;
+          if (hasL3Answers ? !childBranches.length : !matchesNodePath(parentPath, selectedNodes)) return;
           const base = {
             ...answer, answerId: answer.mockAnswerId, scoreKey: `${answer.mockAnswerId}:${l1.questionId}`,
             score: l1.score, l1Name: name(l1.nodeId), l2Name: name(l2.nodeId),
             parentQuestionId: l2.questionId, l1QuestionId: l1.questionId
           };
-          rows.push({
+          if (!hasL3Answers) rows.push({
             ...base, rowKey: `${answer.mockAnswerId}:${l1.questionId}:${l2.questionId}:L2`,
             recordLayer: 'L2', currentQuestionId: l2.questionId, nodePath: parentPath,
             l3Name: '', l4Value: '', l5Value: '', troubleDegree: '', recentOccurrenceTime: ''
@@ -365,7 +366,7 @@
       state.rows = expandAnswers(mock.answers, state.lastConditions);
       state.hasQuery = true; state.page = 1;
       renderResults();
-      setMessage(state.rows.length ? '查询完成，结果按 L2 父行和 L3 子行排列。' : '查询完成，暂无符合条件的数据。', 'is-success');
+      setMessage(state.rows.length ? '查询完成：有 L3 的分支逐条展示明细，仅无 L3 的已作答分支保留 L2 行。' : '查询完成，暂无符合条件的数据。', 'is-success');
       return true;
     }
     function reset(event) {

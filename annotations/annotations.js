@@ -39,24 +39,24 @@ window.AnnotationData = {
   ],
   report: [
     {
-      id: '1', page: 'report', target: '#table-head th[data-column="recordLayer"]', title: 'F04 · L2 与 L3 父子记录拆行',
+      id: '1', page: 'report', target: '#table-head th[data-column="recordLayer"]', title: 'F04 · L2 与 L3 明细拆行',
       sections: {
-        judgeRule: '每个 L2 本身单独一行，其下每个 L3 再各占一行；按“L2 父行→该分支 L3 子行→下一个 L2”排列，没有 L3 的 L2 仍保留父行。',
-        fieldDesc: '记录层级标明 L2 或 L3；答卷基础字段和对应上级路径重复展示，L2 父行的 L3～L5 留空。本静态示例暂将困扰度及最近发生时间展示在所属 L3 子行。',
+        judgeRule: 'L2 有 L3 明细时，每个 L3 各占一行，L2 仅作为上级信息随行展示，不额外增加 L2 行；只有实际有回答但没有 L3 的 L2 分支才单独一行。按 L2 分支及所属 L3 顺序排列。',
+        fieldDesc: '记录层级标明本行是 L2 或 L3；L3 行带出 L1、L2 上级信息，仅 L2 行的 L3～L5 留空。深层筛选只保留匹配的 L3 明细，不因子行被筛掉而补出 L2 行。本静态示例暂将困扰度及最近发生时间展示在所属 L3 明细。',
         otherDesc: '待确认：困扰度与最近发生时间的真实来源及归属；L4/L5 多回答、只到 L1 的答卷及未作答分支的处理。标注定位不提交查询；可用问卷 ID 118 查看示例。'
       }
     },
     {
       id: '2', page: 'report', target: '#result-count', title: 'F04 · 行数与答卷数分别统计',
       sections: {
-        valueLogic: '结果条数按拆行后的 L2＋L3 记录统计；答卷数按实际答卷去重，另分别列出 L2 和 L3 条数。',
-        otherDesc: '示例问卷 118：1 份答卷，3 条 L2＋3 条 L3，共 6 行；6 行不等于 6 份答卷。'
+        valueLogic: '明细条数＝实际 L3 明细条数＋有回答但无 L3 的 L2 分支数；“仅 L2”统计独立 L2 行，“L3”统计 L3 行。答卷数按实际答卷去重，上级 L2 的重复展示不增加条数。',
+        otherDesc: '示例问卷 118：颜色/色差、颜色/褪色、造型/线条不流畅、空气动力学/空，共 4 行（3 条 L3＋1 条仅 L2），仍为 1 份答卷。'
       }
     },
     {
       id: '3', page: 'report', target: '#table-head th[data-column="score"]', title: 'F04 · 重复评分的统计口径',
       sections: {
-        valueLogic: '同一 L1 评分会随父子行重复展示。汇总时按“答卷＋L1 问题”去重，不将重复显示的评分逐行累加。',
+        valueLogic: '同一 L1 评分会随明细行重复展示。汇总时按“答卷＋L1 问题”去重，不将重复显示的评分逐行累加。',
         otherDesc: '此原型展示明细拆行，评分汇总接口与真实业务数据不在本次静态演示范围。'
       }
     },
@@ -72,14 +72,14 @@ window.AnnotationData = {
       sections: {
         judgeRule: '演示暂按至少一个有效条件查询，车系可选；默认逻辑树、默认“全部”不算条件。文本去除首尾空格，日期须填写完整且开始日期不晚于结束日期。',
         exceptionRule: '无有效条件或日期无效时提示并保留原结果；查询成功但无匹配数据时显示空结果。',
-        otherDesc: '待确认：可触发查询的有效条件白名单，以及深层节点筛选时保留 L2 父行的范围。'
+        otherDesc: '待确认：可触发查询的有效条件白名单。深层节点筛选只保留命中的明细，不追加 L2 父行。'
       }
     },
     {
       id: '6', page: 'report', target: '#export-btn', title: 'F05 · 导出与上次查询结果一致',
       sections: {
         dataSource: '刷新、分页和导出均使用上次已提交查询的条件及结果。输入未提交的新条件时提示“条件已修改”，不改变当前结果。',
-        interactionDesc: '导出上次查询的全部记录，包含 L2 父行和 L3 子行；不受当前分页或隐藏列影响。首进空表、查询无结果时禁用导出。',
+        interactionDesc: '导出上次查询的全部明细，包含 L3 行及有回答但无 L3 的独立 L2 行；不受当前分页或隐藏列影响。首进空表、查询无结果时禁用导出。',
         otherDesc: '点击本条标注仅定位导出按钮，不发起下载。'
       }
     },
