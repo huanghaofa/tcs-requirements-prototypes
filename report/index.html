@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>问卷报表明细 · 查询改造预览 - 微信客户调研平台TCS</title>
+<link rel="icon" href="assets/images/nissan-logo.png">
+<link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar" id="sidebar" aria-label="平台导航">
+<a class="brand" href="index.html" aria-label="微信客户调研平台TCS"><img src="assets/images/nissan-logo.png" alt="NISSAN"><span>微信客户调研平台<br><strong>TCS</strong></span></a>
+<nav class="side-nav">
+<div class="nav-group muted"><span>♙</span> 权限管理 <span class="arrow">⌄</span></div>
+<div class="nav-group muted"><span>▤</span> 问卷管理 <span class="arrow">⌄</span></div>
+<div class="nav-group muted"><span>▢</span> 审批管理 <span class="arrow">⌄</span></div>
+<div class="nav-group muted"><span>▧</span> 素材管理 <span class="arrow">⌄</span></div>
+<button class="nav-group open" id="report-nav-toggle" aria-expanded="true"><span>◴</span> 统计报表 <span class="arrow">⌃</span></button>
+<div id="report-nav-items" class="nav-items">
+<div class="nav-item muted">车主统计TCS</div><div class="nav-item muted">未点评重推送推送日志</div><div class="nav-item muted">问题表明细</div><div class="nav-item muted">客户表明细</div><div class="nav-item muted">点评奖励发放日志</div><div class="nav-item muted">答题时长统计</div>
+<a class="nav-item" href="../index.html">需求原型首页</a>
+<a class="nav-item" href="../pages/association.html">逻辑树关联配置</a>
+<a class="nav-item active" href="index.html" aria-current="page">问卷报表明细</a>
+</div>
+<div class="nav-group muted"><span>⚒</span> 配置管理 <span class="arrow">⌄</span></div>
+</nav>
+</aside>
+<div class="workspace">
+<header class="topbar"><button class="icon-button menu-toggle" id="sidebar-toggle" aria-label="收起侧栏" aria-expanded="true">☰</button><div class="breadcrumb">统计报表 <span>/</span> <strong>问卷报表明细</strong><a class="back-hub" href="../index.html">返回功能清单</a></div><div class="user"><span class="demo-label">静态演示</span><span class="avatar">A</span><span>admin<small>超级管理员</small></span></div></header>
+<main class="main">
+<section class="report-card" aria-label="问卷报表明细">
+<form id="query-form" novalidate>
+<div class="filter-grid">
+<div class="field"><label for="f-plan">调查方案单号：</label><input id="f-plan" placeholder="请输入" autocomplete="off"></div>
+<div class="field"><label for="f-qid">问卷ID：</label><input id="f-qid" placeholder="请输入" autocomplete="off"></div>
+<div class="field"><label id="car-label">车系：</label><div id="car-control" class="control-wrap" aria-labelledby="car-label"></div></div>
+<div class="field"><label for="f-vin">vin：</label><input id="f-vin" placeholder="请输入" autocomplete="off"></div>
+</div>
+<div id="advanced-fields">
+<div class="filter-grid">
+<div class="field"><label>交车时间：</label><div class="date-range"><input type="date" id="f-delivery-start" aria-label="交车开始日期"><span>→</span><input type="date" id="f-delivery-end" aria-label="交车结束日期"></div></div>
+<div class="field"><label>推送时间：</label><div class="date-range"><input type="date" id="f-push-start" aria-label="推送开始日期"><span>→</span><input type="date" id="f-push-end" aria-label="推送结束日期"></div></div>
+<div class="field"><label>点评时间：</label><div class="date-range"><input type="date" id="f-review-start" aria-label="点评开始日期"><span>→</span><input type="date" id="f-review-end" aria-label="点评结束日期"></div></div>
+<div class="field"><label for="f-push">推送ID：</label><input id="f-push" placeholder="请输入" autocomplete="off"></div>
+</div>
+<div class="filter-grid filter-last"><div class="field"><label for="f-status">点评状态：</label><select id="f-status"><option value="">全部</option><option value="已完成">已完成</option><option value="填写中">填写中</option></select></div><div class="field"><label for="f-mis">MIS：</label><select id="f-mis"><option value="">请选择</option><option value="外观MIS">外观MIS</option><option value="内饰MIS">内饰MIS</option></select></div></div>
+</div>
+<div class="filter-footer"><p class="query-hint">车系可选，至少设置一个查询条件后点击查询。</p><div class="filter-actions"><button type="button" id="reset-btn" class="btn">重置</button><button type="submit" id="query-btn" class="btn primary">查询</button><button type="button" id="collapse-btn" class="text-button" aria-expanded="true">收起 ⌃</button></div></div>
+<div id="query-message" class="query-message" role="status" aria-live="polite"></div>
+<section class="logic-section" aria-label="按逻辑树筛选"><div class="logic-title">按逻辑树筛选：</div><div class="logic-body"><div class="tree-field"><label for="tree-select">逻辑树</label><select id="tree-select"><option value="tree3">业测的树3</option></select></div><div id="dim-cascade" class="dim-cascade"></div></div></section>
+</form>
+<div class="result-toolbar"><div class="result-summary">共搜索到 <strong id="result-count">0</strong> 条数据<span class="summary-detail">答卷 <b id="answer-count">0</b> 份 <i>·</i> L2 <b id="l2-count">0</b> 条 <i>·</i> L3 <b id="l3-count">0</b> 条</span></div><div class="table-actions"><button id="export-btn" class="btn primary" disabled>导出</button><button id="refresh-btn" class="icon-button" aria-label="刷新查询结果" title="刷新查询结果" disabled>↻</button><button id="density-btn" class="icon-button" aria-label="切换表格密度" title="切换表格密度">↕</button><button id="columns-btn" class="icon-button" aria-label="设置表格列" title="设置表格列" aria-expanded="false">⚙</button></div><div id="column-panel" class="column-panel" hidden></div></div>
+<div id="result-context" class="result-context">尚未查询</div>
+<div class="table-scroll" id="table-scroll" tabindex="0" aria-label="报表，可横向滚动查看层级列"><table id="report-table"><thead id="table-head"></thead><tbody id="table-body"><tr><td>请设置查询条件后点击“查询”</td></tr></tbody></table></div>
+<div id="pagination" class="pagination"></div>
+</section>
+<p class="preview-note">演示数据：输入问卷ID <strong>118</strong> 可查看 3 条 L2 和 3 条 L3 的拆行效果。表格可横向滚动。</p>
+<footer class="footer"><span>车巴巴</span><span>东风日产</span><p>Copyright © 粤ICP备15053418号-1 版权所有 东风日产乘用车公司</p></footer>
+</main>
+</div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="mock/data.js"></script><script src="js/pages/report.js"></script><script src="js/app.js"></script><script src="js/feature-entry.js"></script>
+</body>
+</html>

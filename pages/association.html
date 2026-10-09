@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>统计报表 / 逻辑树关联配置</title>
+<style>
+:root{
+  --bg:#F4F3EF;--surface:#FFF;--surface2:#F9F8F5;--border:#E5E3DC;--border2:#D4D1C8;
+  --text:#1A1916;--text2:#6B6860;--text3:#9E9C95;
+  --blue:#1D4ED8;--blue-light:#EEF2FF;--blue-mid:#DBEAFE;
+  --green:#15803D;--green-light:#F0FDF4;--green-mid:#DCFCE7;
+  --red:#B91C1C;--red-light:#FEF2F2;
+  --amber:#B45309;--amber-light:#FFFBEB;
+  --radius:10px;--radius-sm:6px;
+  --shadow:0 1px 3px rgba(0,0,0,.06);
+  --shadow-md:0 4px 16px rgba(0,0,0,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;-webkit-font-smoothing:antialiased}
+.shell{display:flex;flex-direction:row;height:100vh;overflow:hidden}
+.workspace{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+.sidebar{width:220px;flex:0 0 220px;background:#001529;color:rgba(255,255,255,.68);display:flex;flex-direction:column;flex-shrink:0}
+.side-brand{height:56px;background:#00284D;color:#fff;display:flex;align-items:center;gap:10px;padding:0 18px;font-size:15px;font-weight:600;flex-shrink:0;letter-spacing:-.2px}
+.side-mark{width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.side-nav{padding:8px 0;overflow-y:auto;flex:1}
+.side-section{height:44px;display:flex;align-items:center;gap:10px;padding:0 20px;font-size:13px;color:rgba(255,255,255,.5);cursor:default}
+.side-section.active{color:rgba(255,255,255,.9)}
+.side-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.side-child{height:36px;display:flex;align-items:center;padding-left:46px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;transition:all .12s}
+.side-child:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.06)}
+.side-child.current{background:#1677FF;color:#fff;font-weight:500}
+.side-child.muted{color:rgba(255,255,255,.32);cursor:default}
+.side-child.muted:hover{background:none;color:rgba(255,255,255,.32)}
+
+.body{display:flex;flex-direction:column;flex:1;overflow:hidden;gap:0}
+.body-top{display:flex;flex:1;overflow:hidden;min-height:0}
+
+/* ── 左侧配置区 ── */
+.col-config{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface);border-right:none}
+.config-hdr{padding:14px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;gap:10px}
+.config-hdr-title{font-size:13px;font-weight:500;flex:1}
+
+/* 步骤条 */
+.steps-bar{display:flex;align-items:center;padding:10px 18px;border-bottom:1px solid var(--border);gap:0;flex-shrink:0;overflow-x:auto}
+.step{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.step-num{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border2);font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;color:var(--text3);background:var(--surface);transition:all .2s}
+.step.done .step-num{background:var(--green);border-color:var(--green);color:#fff}
+.step.active .step-num{background:var(--blue);border-color:var(--blue);color:#fff}
+.step-label{font-size:12px;color:var(--text3);white-space:nowrap}
+.step.active .step-label{color:var(--blue);font-weight:500}
+.step.done .step-label{color:var(--green)}
+.step-arrow{margin:0 8px;color:var(--border2);font-size:12px}
+
+/* 主配置区 */
+.config-body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+/* 问卷选择区 */
+.survey-section{padding:14px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.survey-search-row{display:flex;gap:8px;margin-bottom:8px}
+.search-input{flex:1;height:32px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface);color:var(--text)}
+.search-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-mid)}
+.survey-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.survey-tag{display:flex;align-items:center;gap:5px;padding:3px 8px 3px 10px;border-radius:20px;font-size:12px;font-weight:500;background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
+.survey-tag-remove{cursor:pointer;color:#93C5FD;font-size:12px;line-height:1;background:none;border:none;padding:0;margin-left:2px}
+.survey-tag-remove:hover{color:var(--red)}
+.survey-results{max-height:120px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:6px;display:none}
+.survey-result-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border)}
+.survey-result-item:last-child{border-bottom:none}
+.survey-result-item:hover{background:var(--surface2)}
+.survey-result-item.added{color:var(--text3);cursor:default}
+.survey-result-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.survey-result-meta{font-size:11px;color:var(--text3);flex-shrink:0;margin-left:8px}
+
+/* 级联配置区 */
+.cascade-area{flex:1;overflow-x:auto;overflow-y:hidden;display:flex;align-items:stretch;padding:0}
+.survey-config-col{width:260px;flex-shrink:0;border-right:2px solid #BFDBFE;background:linear-gradient(180deg,#F8FBFF 0%,#EFF6FF 100%);display:flex;flex-direction:column;overflow:hidden}
+.survey-config-hdr{padding:10px 12px;border-bottom:1px solid #BFDBFE;background:#EEF6FF;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.survey-config-title{font-size:12px;font-weight:600;color:#1E40AF}
+.survey-config-sub{font-size:10px;color:#64748B}
+.survey-config-body{padding:8px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
+.survey-config-card{border:1px solid #CBD5E1;background:#fff;border-radius:var(--radius-sm);padding:9px 10px;cursor:pointer;transition:all .12s}
+.survey-config-card:hover{border-color:#93C5FD;background:#F8FBFF}
+.survey-config-card.active{border-color:var(--blue);background:var(--blue-light);box-shadow:inset 3px 0 0 var(--blue)}
+.survey-config-main{display:flex;gap:8px;align-items:flex-start}
+.survey-icon{width:30px;height:30px;border-radius:8px;background:#DBEAFE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;flex:0 0 30px}
+.survey-config-card.active .survey-icon{background:#1D4ED8;color:#fff}
+.survey-icon svg{width:17px;height:17px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.survey-config-info{min-width:0;flex:1}
+.survey-config-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.4}
+.survey-config-meta{margin-top:4px;font-size:10px;color:var(--text3);display:flex;justify-content:space-between;gap:8px}
+.survey-config-progress{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.survey-progress-pill{font-size:10px;padding:2px 7px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2)}
+.survey-progress-pill.done{border-color:#86EFAC;background:var(--green-light);color:var(--green)}
+.survey-config-remove{margin-top:7px;border:none;background:transparent;color:var(--text3);font-size:11px;cursor:pointer;padding:0}
+.survey-config-remove:hover{color:var(--red)}
+.cascade-col{width:300px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.cascade-col:last-child{border-right:none}
+.cc-hdr{padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;align-items:stretch;gap:5px}
+.cc-hdr-left{display:flex;align-items:center;gap:6px}
+.cc-lv-badge{font-size:10px;padding:1px 7px;border-radius:10px;font-weight:500}
+.lv1-b{background:#EEF2FF;color:#3730A3}
+.lv2-b{background:#F0FDF4;color:#166534}
+.lv3-b{background:#FFFBEB;color:#92400E}
+.lv4-b{background:#FFF1F2;color:#9F1239}
+.lv5-b{background:#F5F3FF;color:#5B21B6}
+.cc-hdr-name{font-size:12px;font-weight:500;color:var(--text2)}
+.cc-sel-cnt{font-size:10px;color:var(--text3);background:var(--surface);border:1px solid var(--border);padding:1px 6px;border-radius:10px}
+.cc-layer-progress{display:flex;flex-wrap:wrap;font-size:10px;line-height:1.5;color:var(--text2)}
+.cc-layer-progress span{white-space:nowrap}
+.cc-body{flex:1;overflow-y:auto;padding:4px 0}
+.cc-search{padding:6px 8px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.cc-search input{width:100%;height:26px;padding:0 8px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:11px;font-family:inherit;background:var(--surface);color:var(--text)}
+.cc-search input:focus{outline:none;border-color:var(--blue)}
+
+.q-item{display:flex;flex-direction:column;gap:2px;padding:6px 10px;cursor:pointer;border-left:2px solid transparent;transition:all .1s}
+.q-item:hover{background:var(--surface2)}
+.q-item.selected{background:var(--blue-light);border-left:2px solid var(--blue)}
+.q-item-row{display:flex;align-items:flex-start;gap:6px}
+.q-chk{width:14px;height:14px;border:1.5px solid var(--border2);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--surface);transition:all .12s}
+.q-item.selected .q-chk{background:var(--blue);border-color:var(--blue)}
+.q-chk-mark{display:none;color:#fff;font-size:9px;font-weight:700}
+.q-item.selected .q-chk-mark{display:block}
+.q-label{font-size:12px;flex:1;overflow:visible;text-overflow:clip;white-space:normal;line-height:1.45;word-break:break-word}
+.q-type{font-size:10px;color:var(--text3);flex-shrink:0}
+.q-dim{display:flex;align-items:center;gap:4px;margin-top:2px;padding-left:20px}
+.q-dim-arrow{font-size:10px;color:var(--text3)}
+.q-dim-badge{font-size:10px;padding:1px 7px;border-radius:10px;background:var(--green-light);color:var(--green);border:1px solid #86EFAC;font-weight:500}
+.q-dim-btn{font-size:10px;padding:1px 7px;border-radius:10px;border:1px dashed var(--border2);color:var(--text3);background:transparent;cursor:pointer;font-family:inherit;display:none;transition:all .12s}
+.q-item:hover .q-dim-btn{display:inline-block}
+.q-dim-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+.q-dim-change{font-size:10px;padding:1px 5px;border:none;background:none;cursor:pointer;color:var(--text3);font-family:inherit}
+.q-dim-change:hover{color:var(--red)}
+.q-trigger{display:flex;align-items:flex-start;gap:4px;margin-top:2px;padding-left:20px;font-size:10px;color:var(--text3);line-height:1.45}
+.q-trigger-label{color:var(--amber);flex-shrink:0}
+.parent-source{margin:6px 8px 4px;padding:7px 9px;border:1px solid #FCD34D;border-radius:var(--radius-sm);background:var(--amber-light);font-size:11px;line-height:1.45;color:var(--text2)}
+.parent-source strong{color:var(--amber);font-weight:500}
+.parent-source-title{display:block;color:var(--text);font-weight:500;margin-top:2px}
+
+.cc-empty{padding:20px 10px;text-align:center;font-size:12px;color:var(--text3);line-height:1.7}
+.add-lv-col{width:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-left:1px solid var(--border)}
+.add-lv-btn{width:28px;height:28px;border-radius:50%;border:1.5px dashed var(--border2);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:default;color:var(--text3);font-size:16px;transition:all .2s}
+.add-lv-btn.on{border-color:var(--blue);background:var(--blue-light);color:var(--blue);cursor:pointer}
+.add-lv-btn.on:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ── 右侧：维度树预览 ── */
+.col-preview{height:300px;flex-shrink:0;display:flex;flex-direction:column;background:var(--bg);border-top:1px solid var(--border)}
+.preview-hdr{padding:8px 18px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.preview-hdr-title{font-size:13px;font-weight:500}
+.preview-hdr-sub{font-size:11px;color:var(--text3);margin-left:8px}
+.preview-body{flex:1;overflow:auto;padding:12px 16px;display:block}
+.preview-tree{position:relative;min-width:1120px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:10px 12px;display:flex;gap:36px;align-items:flex-start}
+.preview-lines{position:absolute;inset:0;pointer-events:none;width:100%;height:100%}
+.preview-tree-col{position:relative;width:200px;flex:0 0 200px;display:flex;flex-direction:column;gap:12px;z-index:1}
+.preview-col-title{height:24px;display:flex;align-items:center;gap:6px;color:var(--text3);font-size:11px;font-weight:500}
+.preview-node-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow);padding:8px 9px}
+.preview-node-card:hover{border-color:#93C5FD}
+.preview-node-row{min-height:24px;display:flex;align-items:center;gap:6px}
+.preview-node-name{font-size:13px;font-weight:600;color:var(--text)}
+.preview-level{display:inline-flex;align-items:center;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:500;white-space:nowrap}
+.preview-parent-note{font-size:11px;color:var(--text3)}
+.preview-count{font-size:10px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);padding:1px 6px;border-radius:10px}
+.preview-map-list{display:flex;flex-direction:column;gap:5px;margin-top:7px}
+.preview-map-item{display:grid;grid-template-columns:1fr auto;gap:5px;align-items:start;padding:6px 7px;background:var(--blue-light);border:1px solid #BFDBFE;border-radius:var(--radius-sm);font-size:11px;line-height:1.45}
+.preview-survey{font-weight:500;color:var(--blue);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preview-question{grid-column:1 / 3;color:var(--text);word-break:break-word}
+.preview-path{grid-column:1 / 3;color:var(--green);font-weight:500}
+.preview-remove{border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:12px;padding:0 4px}
+.preview-remove:hover{color:var(--red)}
+
+.tree-dim-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);flex-shrink:0;width:180px;display:flex;flex-direction:column}
+.tdc-hdr{padding:7px 10px;display:flex;align-items:center;gap:6px;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0}
+.tdc-bar{width:3px;height:14px;border-radius:2px;flex-shrink:0}
+.tdc-name{font-size:12px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tdc-cnt{font-size:10px;color:var(--text3);background:var(--surface);border:1px solid var(--border);padding:1px 5px;border-radius:10px;flex-shrink:0}
+.tdc-body{padding:6px 8px;display:flex;flex-direction:column;gap:3px;flex:1;overflow-y:auto}
+.tdc-tag{display:flex;align-items:center;gap:5px;padding:3px 6px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px}
+.tdc-tag-sv{font-size:10px;padding:1px 5px;border-radius:8px;font-weight:500;flex-shrink:0;max-width:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sv-c0{background:#DBEAFE;color:#1E40AF}
+.sv-c1{background:#DCFCE7;color:#166534}
+.sv-c2{background:#FEF3C7;color:#92400E}
+.sv-c3{background:#F3E8FF;color:#6D28D9}
+.tdc-tag-lv{font-size:10px;color:var(--text3);flex-shrink:0}
+.tdc-tag-val{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tdc-tag-rm{background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:1px 3px;border-radius:3px;flex-shrink:0}
+.tdc-tag-rm:hover{color:var(--red)}
+.tdc-path{display:flex;flex-direction:column;gap:4px;padding:5px 6px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px;line-height:1.45}
+.tdc-path-main{display:flex;gap:5px;align-items:center}
+.tdc-path-sv{font-size:10px;padding:1px 5px;border-radius:8px;font-weight:500;flex-shrink:0;max-width:54px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tdc-path-q{flex:1;overflow:visible;text-overflow:clip;white-space:normal;color:var(--text);word-break:break-word}
+.tdc-path-full{padding-left:2px;color:var(--text2);white-space:normal}
+.tdc-path-rm{background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:1px 3px;border-radius:3px;flex-shrink:0}
+.tdc-path-rm:hover{color:var(--red)}
+.q-lv-select{height:22px;padding:0 6px;border:1px solid var(--border2);border-radius:20px;font-size:10px;font-family:inherit;background:var(--surface);color:var(--text2);cursor:pointer;flex-shrink:0;transition:all .12s}
+.q-lv-select:focus{outline:none;border-color:var(--blue)}
+.q-lv-select.set-lv1{background:#EEF2FF;color:#3730A3;border-color:#A5B4FC}
+.q-lv-select.set-lv2{background:#F0FDF4;color:#166534;border-color:#86EFAC}
+.q-lv-select.set-lv3{background:#FFFBEB;color:#92400E;border-color:#FDE68A}
+.q-lv-select.set-lv4{background:#FFF1F2;color:#9F1239;border-color:#FECACA}
+.q-lv-select.set-lv5{background:#F5F3FF;color:#5B21B6;border-color:#C4B5FD}
+.q-lv-hint{font-size:10px;color:var(--text3);margin-left:4px}
+.tdc-children{display:flex;flex-direction:row;gap:8px;margin-top:0;padding-left:0;border-left:none;align-items:flex-start}
+.tdc-empty{font-size:11px;color:var(--text3);padding:4px 6px;font-style:italic}
+.preview-empty-state{display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);width:100%}
+.tdc-connector{display:flex;align-items:center;flex-shrink:0;padding-top:22px}
+.tdc-connector-arrow{font-size:12px;color:var(--border2);padding:0 2px}
+
+/* 模态：选维度节点 */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--surface);border-radius:var(--radius);padding:22px;width:380px;box-shadow:var(--shadow-md)}
+.modal-title{font-size:15px;font-weight:500;margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5}
+.modal-list{max-height:240px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:14px;padding:4px 0}
+.mli{display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;transition:background .1s}
+.mli:hover{background:var(--surface2)}
+.mli.sel{background:var(--blue-light)}
+.mli-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.mli-lv{font-size:10px;padding:1px 6px;border-radius:8px;flex-shrink:0}
+.mli-label{font-size:13px;flex:1}
+.mli.sel .mli-label{color:var(--blue);font-weight:500}
+.modal-footer{display:flex;align-items:center;justify-content:flex-end}
+.modal-btns{display:flex;gap:8px}
+
+/* 原型风格增强：仅补充题目 ID、保留节点与 1080P 适配 */
+.q-meta{display:flex;align-items:center;gap:6px;margin:0 0 2px 20px;min-width:0}
+.q-survey{font-size:10px;color:var(--blue);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.q-id{font-size:9px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;white-space:nowrap}
+.q-node-path{font-size:10px;padding:1px 7px;border-radius:10px;background:var(--green-light);color:var(--green);border:1px solid #86EFAC;font-weight:500}
+.q-reselect{font-size:10px;padding:1px 5px;border:none;background:none;cursor:pointer;color:var(--text3);font-family:inherit}
+.q-reselect:hover{color:var(--blue)}
+.parent-source-id{display:inline-flex;margin-top:4px;font-size:9px;color:var(--text3);background:#fff;border:1px solid #FDE68A;border-radius:10px;padding:1px 6px}
+.reserved-panel{display:flex;align-items:center;gap:14px;padding:9px 10px;margin:0 0 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px}
+.reserved-title{color:var(--text3);font-weight:500}
+.reserved-panel label{display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--text2)}
+.add-survey-card{height:34px;margin-top:2px;border:1px dashed var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text3);font:11px/1 inherit;cursor:pointer}
+.add-survey-card:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+.topbar{height:56px;display:flex;align-items:center;padding:0 18px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.topbar-logo{font-size:15px;font-weight:600;color:var(--text)}
+.topbar-sep{width:1px;height:18px;background:var(--border);margin:0 14px}
+.topbar-title{font-size:13px;color:var(--text2)}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.btn{height:30px;padding:0 13px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text2);font:12px/1 inherit;cursor:pointer}
+.btn:hover{border-color:#93C5FD;color:var(--blue);background:var(--blue-light)}
+.btn-primary{border-color:var(--blue);background:var(--blue);color:#fff}
+.btn-primary:hover{background:#1E40AF;color:#fff;border-color:#1E40AF}
+.btn-sm{height:27px;padding:0 10px}
+.modal-search{width:100%;height:30px;padding:0 10px;margin-bottom:8px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);outline:none}
+.modal-search:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-mid)}
+@media(max-width:1600px){
+  .sidebar{width:200px;flex-basis:200px}
+  .survey-config-col{width:220px}.cascade-col{width:235px}
+  .preview-tree{min-width:1040px;gap:20px}.preview-tree-col{width:190px;flex-basis:190px}
+}
+</style>
+<link rel="stylesheet" href="../assets/css/association-export.css"/>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="side-brand">
+      <div class="side-mark">T</div>
+      <span>TCS 平台</span>
+    </div>
+    <nav class="side-nav">
+      <div class="side-section"><span class="side-dot"></span><span>权限管理</span></div><div class="side-child muted">用户管理</div><div class="side-child muted">角色管理</div><div class="side-child muted">菜单管理</div>
+      <div class="side-section"><span class="side-dot"></span><span>问卷管理</span></div><div class="side-child muted">问卷列表</div>
+      <div class="side-section"><span class="side-dot"></span><span>素材管理</span></div><div class="side-child muted">链接库</div><div class="side-child muted">图标库</div><div class="side-child muted">背景图</div>
+      <div class="side-section"><span class="side-dot"></span><span>审批管理</span></div><div class="side-child muted">问卷发布审批</div><div class="side-child muted">调查方案审批</div><div class="side-child muted">我的审批</div><div class="side-child muted">人工审核点评</div><div class="side-child muted">自定义字段报表配置</div>
+      <div class="side-section active"><span class="side-dot"></span><span>统计报表</span></div><div class="side-child muted">车主统计</div><div class="side-child current">维度关联配置</div><div class="side-child muted">推送日志</div><div class="side-child muted">点评奖励发放日志</div><div class="side-child muted">tcs问题表列表</div><div class="side-child muted">tcs客户表列表</div><div class="side-child muted">问卷报表明细</div>
+      <div class="side-section"><span class="side-dot"></span><span>定向推送管理</span></div><div class="side-child muted">推送列表</div><div class="side-child muted">选择推送内容</div><div class="side-child muted">选择推送方式</div><div class="side-child muted">选择推送对象</div><div class="side-child muted">选择推送时间</div><div class="side-child muted">确认信息</div><div class="side-child muted">完成</div>
+      <div class="side-section"><span class="side-dot"></span><span>系统管理</span></div><div class="side-child muted">操作日志</div>
+    </nav>
+  </aside>
+
+
+  <div class="workspace">
+    <div class="topbar">
+      <a class="assoc-hub-link" href="../index.html">← 返回原型中心</a>
+      <span class="topbar-logo">微信客户调研平台 TCS</span>
+      <div class="topbar-sep"></div>
+      <span class="topbar-title">维度关联配置</span>
+      <div class="topbar-actions">
+        <span style="font-size:12px;color:var(--text3)">当前逻辑树：</span>
+        <select id="tree-select" style="height:30px;padding:0 8px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--surface);color:var(--text)" onchange="onTreeChange()"></select>
+        <button class="btn btn-primary" onclick="saveAll()">保存</button>
+        <button class="btn" id="association-export-btn" type="button" aria-haspopup="dialog">导出关联配置</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="body-top">
+      <!-- 配置区 -->
+      <div class="col-config">
+        <div class="config-hdr" id="F01" tabindex="-1">
+          <div class="config-hdr-title">逐层配置问卷题目与维度</div>
+        </div>
+
+      <!-- 问卷选择 -->
+      <div class="survey-section">
+        <div style="font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">第一步：选择问卷</div>
+        <div class="survey-search-row">
+          <input class="search-input" id="survey-search" placeholder="搜索问卷名称、编号…" oninput="onSurveySearch()"/>
+          <button class="btn btn-sm" onclick="onSurveySearch()">搜索</button>
+        </div>
+        <div class="survey-results" id="survey-results"></div>
+        <div class="survey-tags" id="survey-tags">
+          <span style="font-size:12px;color:var(--text3)">已选问卷将显示在此</span>
+        </div>
+      </div>
+
+      <!-- 级联配置 -->
+      <div style="padding:8px 18px 6px;border-bottom:1px solid var(--border);flex-shrink:0">
+        <span style="font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">第二步：逐层选择题目并配置维度</span>
+      </div>
+      <div class="config-body">
+        <div class="cascade-area" id="cascade-area"></div>
+      </div>
+    </div>
+
+    </div><!-- /body-top -->
+    <!-- 底部：维度树预览 -->
+    <div class="col-preview">
+      <div class="preview-hdr">
+        <div class="preview-hdr-title">逻辑树关联预览</div>
+        <div class="preview-hdr-sub">实时展示已配置的维度节点与题目映射关系</div>
+      </div>
+      <div class="preview-body" id="preview-body">
+        <div class="preview-empty-state">选择维度树后显示预览</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 模态：选维度节点（沿用原型结构） -->
+<div class="overlay" id="modal" style="display:none">
+  <div class="modal" id="F02">
+    <div class="modal-title" id="modal-title">选择维度节点</div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <div class="assoc-scope-note">本页仅关联现有节点，支持普通节点和系统保留节点。</div>
+    <input id="modal-search" class="modal-search" placeholder="搜索节点…" oninput="renderModalList()"/>
+    <div class="modal-list" id="modal-list"></div>
+    <div class="reserved-panel">
+      <div class="reserved-title">系统保留节点</div>
+      <label><input type="radio" name="reserved-node-choice" value="困扰度" onchange="toggleReserved(this)">困扰度</label>
+      <label><input type="radio" name="reserved-node-choice" value="最近发生时间" onchange="toggleReserved(this)">最近发生时间</label>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-btns"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="confirmModal()">确认</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="association-export-overlay" id="association-export-overlay" hidden>
+  <section class="association-export-dialog" role="dialog" aria-modal="true" aria-labelledby="association-export-title" id="F03">
+    <header class="association-export-header">
+      <div><h2 id="association-export-title">关联配置逐题导出</h2><p id="association-export-summary"></p></div>
+      <button class="association-export-close" type="button" id="association-export-close" aria-label="关闭导出预览">×</button>
+    </header>
+    <div class="association-export-description">导出已添加问卷的全部题目，每题一行。保留完整上级路径，上级未配置时仍保留下级题目。</div>
+    <div class="association-export-status" id="association-export-status" role="status" aria-live="polite"></div>
+    <div class="association-export-scroll" id="association-export-scroll"><table class="association-export-table"><thead id="association-export-head"></thead><tbody id="association-export-body"></tbody></table></div>
+    <div class="association-export-pagination" id="association-export-pagination"></div>
+    <footer class="association-export-footer">
+      <p>CSV 反映当前配置；Excel 样例为已制作的固定展示样例。</p>
+      <div><a class="btn" href="../downloads/association-export-sample.xlsx" download="逻辑树关联配置_Excel样例.xlsx">下载 Excel 样例</a><button class="btn btn-primary" id="association-export-download" type="button">下载当前配置 CSV</button></div>
+    </footer>
+  </section>
+</div>
+
+<script>
+const LV_NAMES=['第一层','第二层','第三层','第四层','第五层'];
+const LV_BADGES=['lv1-b','lv2-b','lv3-b','lv4-b','lv5-b'];
+const LV_NODE_BADGES=['lv1-b','lv2-b','lv3-b','lv4-b','lv5-b'];
+const SV_COLORS=['sv-c0','sv-c1','sv-c2','sv-c3'];
+
+// 模拟问卷库（实际有几千张）
+const SURVEY_DB=[
+  {id:'sA',name:'新车交付外观满意度调查',code:'QN-A001',cnt:5},
+  {id:'sB',name:'售后回访外观问题定位',code:'QN-B001',cnt:5},
+];
+
+const SURVEY_TREE={
+  sA:{
+    L1:[
+      {id:'a1',val:'您对本次新车交付时的整体外观是否满意？',type:'评分题',note:'1–2分不满意 → 展示Q2'},
+    ],
+    L2:{
+      a1:[
+        {id:'a2a',val:'您主要对哪方面的颜色表现不满意？',type:'单选题'},
+        {id:'a2b',val:'您主要对哪方面的车身造型表现不满意？',type:'单选题'},
+        {id:'a2c',val:'您主要对哪方面的漆面质量不满意？',type:'单选题'},
+        {id:'a2d',val:'您认为车辆空气动力学设计是否存在问题？',type:'单选题'},
+      ],
+    },
+    L3:{
+      a2a:[
+        {id:'a3a',val:'您发现车身存在色差问题吗？',type:'单选题'},
+        {id:'a3b',val:'您觉得整车颜色观感不好看吗？',type:'单选题'},
+        {id:'a3c',val:'您发现车漆存在褪色现象吗？',type:'单选题'},
+      ],
+      a2b:[
+        {id:'a3d',val:'您觉得车身线条过渡不流畅吗？',type:'单选题'},
+        {id:'a3e',val:'您认为车身整体比例协调性不佳吗？',type:'单选题'},
+      ],
+      a2c:[
+        {id:'a3f',val:'您发现漆面存在厚薄不均或橘皮现象吗？',type:'单选题'},
+        {id:'a3g',val:'您发现交付时漆面已有划痕或磕碰吗？',type:'单选题'},
+      ],
+      a2d:[
+        {id:'a3h',val:'您认为车辆气流导向设计存在问题吗？',type:'单选题'},
+        {id:'a3i',val:'您在高速行驶时感受到明显风噪吗？',type:'单选题'},
+      ],
+    },
+    L4:{
+      a3a:[
+        {id:'a4a',val:'请问色差主要出现在漆面哪个位置？',type:'填空题',note:'→ 展示Q5'},
+        {id:'a4b',val:'请问色差主要出现在哪些部件之间？',type:'填空题'},
+      ],
+      a3c:[
+        {id:'a4c',val:'请问褪色现象主要发生在车顶哪个区域？',type:'填空题'},
+        {id:'a4d',val:'请问车门哪个边缘位置出现了褪色？',type:'填空题'},
+      ],
+      a3d:[
+        {id:'a4e',val:'请问侧面弧度哪个部位过渡不自然？',type:'填空题'},
+        {id:'a4f',val:'请问腰线在哪个位置出现了断续感？',type:'填空题'},
+      ],
+      a3h:[
+        {id:'a4g',val:'请问前脸导流设计哪里您认为有所欠缺？',type:'填空题'},
+        {id:'a4h',val:'请问底盘扰流方面您具体感受到了哪些问题？',type:'填空题'},
+      ],
+    },
+    L5:{
+      a4a:[
+        {id:'a5a',val:'请详细描述漆面色差的具体表现及位置？',type:'填空题'},
+      ],
+      a4b:[
+        {id:'a5b',val:'请描述门板与翼子板之间色差的具体情况？',type:'填空题'},
+        {id:'a5c',val:'请描述保险杠与车身接缝处色差的具体情况？',type:'填空题'},
+      ],
+      a4c:[
+        {id:'a5d',val:'请描述车顶漆面色泽不均匀的具体区域及表现？',type:'填空题'},
+      ],
+      a4d:[
+        {id:'a5e',val:'请描述车门框边缘褪色的具体位置与严重程度？',type:'填空题'},
+      ],
+      a4e:[
+        {id:'a5f',val:'请描述A柱弧度突变的具体位置与视觉感受？',type:'填空题'},
+        {id:'a5g',val:'请描述C柱收尾处线条不顺滑的具体位置？',type:'填空题'},
+      ],
+      a4g:[
+        {id:'a5h',val:'请描述前格栅导流板角度您认为存在的问题？',type:'填空题'},
+        {id:'a5i',val:'请描述扰流板仰角偏差带来的具体影响？',type:'填空题'},
+      ],
+    },
+  },
+
+  sB:{
+    L1:[
+      {id:'b1',val:'您本次投诉的问题是否属于外观类问题？',type:'单选题',note:'选"是" → 展示Q2'},
+    ],
+    L2:{
+      b1:[
+        {id:'b2a',val:'您反馈的外观问题属于颜色类吗？',type:'单选题'},
+        {id:'b2b',val:'您反馈的外观问题属于车身造型类吗？',type:'单选题'},
+        {id:'b2c',val:'您反馈的外观问题属于漆面质量类吗？',type:'单选题'},
+        {id:'b2d',val:'您反馈的外观问题属于空气动力学类吗？',type:'单选题'},
+      ],
+    },
+    L3:{
+      b2a:[
+        {id:'b3a',val:'您发现不同部位之间漆色存在明显不一致？',type:'单选题'},
+        {id:'b3b',val:'您的车漆是否出现了褪色或变色现象？',type:'单选题'},
+        {id:'b3c',val:'您认为实车颜色与展厅样车存在明显差异？',type:'单选题'},
+      ],
+      b2b:[
+        {id:'b3d',val:'您发现车身侧面轮廓存在起伏不平的问题？',type:'单选题'},
+        {id:'b3e',val:'您感受到车身设计线条存在断裂感或不连贯？',type:'单选题'},
+      ],
+      b2c:[
+        {id:'b3f',val:'您发现漆面存在明显橘皮或颗粒感？',type:'单选题'},
+        {id:'b3g',val:'您发现漆膜厚度不均、局部过薄的情况？',type:'单选题'},
+      ],
+      b2d:[
+        {id:'b3h',val:'您认为车辆气流导向方面存在设计缺陷？',type:'单选题'},
+        {id:'b3i',val:'您在高速行驶中遭遇明显风噪干扰？',type:'单选题'},
+        {id:'b3j',val:'您感觉车辆高速行驶时稳定性不佳？',type:'单选题'},
+      ],
+    },
+    L4:{
+      b3a:[
+        {id:'b4a',val:'请问色差主要发生在哪块钣金件上？',type:'填空题',note:'→ 展示Q5'},
+        {id:'b4b',val:'请问前后保险杠与车身之间色差如何？',type:'填空题'},
+      ],
+      b3b:[
+        {id:'b4c',val:'请问车顶漆面色泽不均发生在哪个区域？',type:'填空题'},
+        {id:'b4d',val:'请问车门下边缘褪色的范围有多大？',type:'填空题'},
+      ],
+      b3d:[
+        {id:'b4e',val:'请问后翼子板弧度偏差主要体现在哪里？',type:'填空题'},
+        {id:'b4f',val:'请问侧裙线条不连贯发生在哪个位置？',type:'填空题'},
+      ],
+      b3h:[
+        {id:'b4g',val:'请问前脸进气格栅导流方面您认为问题在哪里？',type:'填空题'},
+        {id:'b4h',val:'请问底盘护板平整度哪里存在问题？',type:'填空题'},
+      ],
+    },
+    L5:{
+      b4a:[
+        {id:'b5a',val:'请详细描述前后保险杠与车身色差的具体表现？',type:'填空题'},
+        {id:'b5b',val:'请描述车身整体漆色差异分布及严重程度？',type:'填空题'},
+      ],
+      b4b:[
+        {id:'b5c',val:'请描述后保险杠接缝处色差的位置与表现？',type:'填空题'},
+      ],
+      b4c:[
+        {id:'b5d',val:'请描述车顶漆色发白或不均的具体区域？',type:'填空题'},
+      ],
+      b4d:[
+        {id:'b5e',val:'请描述车门下边缘褪色的范围与深浅程度？',type:'填空题'},
+      ],
+      b4e:[
+        {id:'b5f',val:'请描述A柱附近弧度突变点的位置与表现？',type:'填空题'},
+      ],
+      b4g:[
+        {id:'b5g',val:'请描述前格栅开口比例您认为存在的具体问题？',type:'填空题'},
+        {id:'b5h',val:'请描述扰流板俯仰角偏差带来的具体感受？',type:'填空题'},
+      ],
+    },
+  },
+};
+
+const TREES=[
+  {id:'tree1',name:'外观分析树',color:'#11A9E3',
+   nodes:[
+    {id:'n1',label:'外观',depth:0,children:[
+      {id:'n2',label:'颜色',depth:1,children:[
+        {id:'n4',label:'色差',depth:2,children:[
+          {id:'n8',label:'漆面色差',depth:3,children:[
+            {id:'n12',label:'局部色差',depth:4,children:[]},
+            {id:'n13',label:'整体色差',depth:4,children:[]},
+            {id:'n14',label:'保险杠接缝色差',depth:4,children:[]},
+          ]},
+        ]},
+        {id:'n5',label:'褪色',depth:2,children:[
+          {id:'n9',label:'局部褪色',depth:3,children:[
+            {id:'n15',label:'车门边缘褪色',depth:4,children:[]},
+          ]},
+        ]},
+      ]},
+      {id:'n3',label:'造型',depth:1,children:[
+        {id:'n6',label:'线条流畅度',depth:2,children:[
+          {id:'n10',label:'侧面弧度',depth:3,children:[
+            {id:'n16',label:'A柱弧度',depth:4,children:[]},
+          ]},
+        ]},
+      ]},
+      {id:'n3b',label:'空气动力学',depth:1,children:[
+        {id:'n7',label:'气流导向',depth:2,children:[
+          {id:'n11',label:'前脸导流',depth:3,children:[
+            {id:'n17',label:'扰流板角度',depth:4,children:[]},
+          ]},
+        ]},
+      ]},
+    ]},
+  ]},
+  {id:'tree2',name:'智能驾驶体验树',color:'#11A9E3',nodes:[
+    {id:'d1',label:'辅助驾驶',depth:0,children:[
+      {id:'d2',label:'NOA领航',depth:1,children:[{id:'d3',label:'变道决策',depth:2,children:[{id:'d4',label:'响应时机',depth:3,children:[{id:'d5',label:'提前量',depth:4,children:[]}]}]}]},
+      {id:'d6',label:'车道保持',depth:1,children:[{id:'d7',label:'偏离纠正',depth:2,children:[]}]}
+    ]}
+  ]},
+  {id:'tree3',name:'噪音分析逻辑树',color:'#11A9E3',nodes:[
+    {id:'z1',label:'噪音',depth:0,children:[
+      {id:'z2',label:'胎噪',depth:1,children:[{id:'z3',label:'低速胎噪',depth:2,children:[{id:'z4',label:'速度区间',depth:3,children:[{id:'z5',label:'30～60km/h',depth:4,children:[]}]}]}]},
+      {id:'z6',label:'风噪',depth:1,children:[{id:'z7',label:'A柱风音',depth:2,children:[]}]}
+    ]}
+  ]},
+  {id:'tree4',name:'售后服务分析树',color:'#11A9E3',nodes:[
+    {id:'s1n',label:'服务质量',depth:0,children:[{id:'s2n',label:'维修技术',depth:1,children:[{id:'s3n',label:'一次修复率',depth:2,children:[{id:'s4n',label:'原因定位',depth:3,children:[{id:'s5n',label:'用户描述',depth:4,children:[]}]}]}]}]}
+  ]},
+];
+
+// 映射：questionId → nodeId
+let mappings={};
+// 题目自定义树层级标签：questionId → treeDepth (0-4)
+let questionLevels={};
+let currentTreeId=null;
+// 每层已选的题目 id 集合
+let layerSelected=[new Set(),new Set(),new Set(),new Set(),new Set()];
+// 激活的层数
+let activeLayers=1;
+// 已选问卷
+let selectedSurveys=[];
+let activeSurveyId=null;
+// 模态状态
+let modalPending=null; // {qId, lv}
+let modalPickedNodeId=null;
+let reservedMappings={}; // 题目选择的系统保留节点；与普通节点互斥
+let pendingReserved=new Set();
+let treeStates={};
+let lastTreeId=null;
+
+// ── 初始化 ──
+(function init(){
+  const sel=document.getElementById('tree-select');
+  TREES.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name;sel.appendChild(o);});
+  sel.value='tree1';
+  onTreeChange();
+  // 默认选中两份问卷
+  addSurvey('sA');addSurvey('sB');
+  switchSurvey('sA');
+  // 默认展示一组完整的五层题目与逻辑树映射，打开页面即可看到截图状态
+  layerSelected[0]=new Set(['a1']);
+  layerSelected[1]=new Set(['a2a','a2b','a2c','a2d']);
+  layerSelected[2]=new Set(['a3a','a3c','a3d','a3h']);
+  layerSelected[3]=new Set(['a4a','a4b','a4c','a4d','a4e','a4g']);
+  layerSelected[4]=new Set(['a5a','a5b','a5c','a5d','a5e','a5f','a5h']);
+  mappings={
+    a1:'n1',a2a:'n2',a2b:'n3',a2c:'n2',a2d:'n3b',
+    a3a:'n4',a3c:'n5',a3d:'n6',a3h:'n7',
+    a4a:'n8',a4b:'n8',a4c:'n9',a4d:'n9',a4e:'n10',a4g:'n11',
+    a5a:'n12',a5b:'n13',a5c:'n14',a5d:'n15',a5e:'n15',a5f:'n16',a5h:'n17'
+  };
+  reservedMappings={};
+  recomputeActiveLayers();
+  renderCascade();renderPreview();
+})();
+
+function getTree(){return TREES.find(t=>t.id===currentTreeId);}
+function findNode(nodes,id){for(const n of nodes){if(n.id===id)return n;const f=findNode(n.children||[],id);if(f)return f;}return null;}
+function flatNodes(nodes,arr=[]){nodes.forEach(n=>{arr.push(n);flatNodes(n.children||[],arr);});return arr;}
+function getActiveSurvey(){return selectedSurveys.find(s=>s.id===activeSurveyId)||selectedSurveys[0]||null;}
+
+function recomputeActiveLayers(){
+  const sv=getActiveSurvey();
+  const ids=sv?getSurveyQuestionIds(sv.id):new Set();
+  activeLayers=1;
+  for(let lv=0;lv<4;lv++){
+    const hasSelected=[...layerSelected[lv]].some(id=>ids.has(id));
+    if(!hasSelected)break;
+    activeLayers=lv+2;
+  }
+}
+
+function getSurveyQuestionIds(id){
+  const tree=SURVEY_TREE[id]||{};
+  const ids=new Set();
+  ['L1','L2','L3','L4','L5'].forEach(k=>{
+    const v=tree[k];
+    if(Array.isArray(v))v.forEach(q=>ids.add(q.id));
+    else if(v)Object.values(v).flat().forEach(q=>ids.add(q.id));
+  });
+  return ids;
+}
+
+function getSurveyProgress(id){
+  const ids=getSurveyQuestionIds(id);
+  let selected=0,mapped=0;
+  ids.forEach(qid=>{
+    if(layerSelected.some(set=>set.has(qid)))selected++;
+    if(mappings[qid]||(reservedMappings[qid]&&reservedMappings[qid].size))mapped++;
+  });
+  return {total:ids.size,selected,mapped};
+}
+
+function findQuestionInSurvey(sid,qid){
+  const tree=SURVEY_TREE[sid];if(!tree)return null;
+  for(const k of ['L1','L2','L3','L4','L5']){
+    const v=tree[k];
+    const arr=Array.isArray(v)?v:Object.values(v||{}).flat();
+    const q=arr.find(x=>x.id===qid);
+    if(q)return q;
+  }
+  return null;
+}
+
+function getTriggerText(q,lv){
+  if(!q||lv===0)return '';
+  if(q.trigger)return q.trigger;
+  const text=q.val||'';
+  const rules=[
+    ['颜色','选择“颜色”'],
+    ['造型','选择“造型”'],
+    ['空气动力学','选择“空气动力学”'],
+    ['气流导向','选择“气流导向”'],
+    ['色差','选择“色差”'],
+    ['褪色','选择“褪色”'],
+    ['线条','选择“线条流畅度”'],
+    ['漆面','选择“漆面色差”'],
+    ['前脸','选择“前脸导流”'],
+    ['扰流','选择“扰流板角度”'],
+    ['A柱','选择“A柱弧度”'],
+    ['车门','选择“车门边缘褪色”'],
+    ['保险杠','选择“保险杠接缝色差”'],
+  ];
+  const hit=rules.find(([kw])=>text.includes(kw));
+  return hit?hit[1]:'选择对应分支';
+}
+
+function getNodePathLabel(nodeId){
+  const t=getTree();if(!t)return '';
+  const path=[];
+  function walk(nodes){
+    for(const n of nodes){
+      path.push(n.label);
+      if(n.id===nodeId)return true;
+      if(walk(n.children||[]))return true;
+      path.pop();
+    }
+    return false;
+  }
+  walk(t.nodes);
+  return path.join(' / ');
+}
+
+function getNodePathNodes(nodeId){
+  const t=getTree();if(!t)return [];
+  const path=[];
+  function walk(nodes){
+    for(const n of nodes){
+      path.push(n);
+      if(n.id===nodeId)return true;
+      if(walk(n.children||[]))return true;
+      path.pop();
+    }
+    return false;
+  }
+  walk(t.nodes);
+  return path.slice();
+}
+
+function getQuestionLevel(qid){
+  for(const sv of selectedSurveys){
+    const tree=SURVEY_TREE[sv.id];if(!tree)continue;
+    for(let i=0;i<5;i++){
+      const k=['L1','L2','L3','L4','L5'][i];
+      const v=tree[k];
+      const arr=Array.isArray(v)?v:Object.values(v||{}).flat();
+      if(arr.some(q=>q.id===qid))return i;
+    }
+  }
+  return -1;
+}
+
+function getModalQuestion(){
+  if(!modalPending)return null;
+  return getQuestionsForLayer(modalPending.lv).find(x=>x.id===modalPending.qId)||null;
+}
+
+function getAllowedNodesForModal(){
+  const t=getTree();
+  if(!t||!modalPending) return {nodes:[],blocked:false,reason:''};
+  const targetDepth=modalPending.lv;
+  const nodesAtDepth=flatNodes(t.nodes).filter(n=>n.depth===targetDepth);
+  if(!nodesAtDepth.length) return {nodes:[],blocked:true,
+    reason:`逻辑树第${['一','二','三','四','五'][targetDepth]}层暂无节点，请先在树管理页添加`};
+  return {nodes:nodesAtDepth,blocked:false,reason:''};
+}
+
+function clearChildMappings(qId,lv,sid){
+  const childLv=lv+1;
+  if(childLv>=5)return;
+  const qTree=SURVEY_TREE[sid];if(!qTree)return;
+  const key=['L1','L2','L3','L4','L5'][childLv];
+  const children=(qTree[key]&&qTree[key][qId])||[];
+  children.forEach(child=>{
+    delete mappings[child.id];
+    delete reservedMappings[child.id];
+    layerSelected[childLv].delete(child.id);
+    clearChildMappings(child.id,childLv,sid);
+  });
+}
+
+function clearChildSelections(qId,lv,sid){
+  const childLv=lv+1;
+  if(childLv>=5)return;
+  const key=['L1','L2','L3','L4','L5'][childLv];
+  const qTree=SURVEY_TREE[sid];if(!qTree)return;
+  const children=(qTree[key]&&qTree[key][qId])||[];
+  children.forEach(child=>{
+    layerSelected[childLv].delete(child.id);
+    delete mappings[child.id];
+    delete reservedMappings[child.id];
+    clearChildSelections(child.id,childLv,sid);
+  });
+}
+
+function onTreeChange(){
+  if(lastTreeId){
+    treeStates[lastTreeId]={
+      mappings:{...mappings},
+      reservedMappings:Object.fromEntries(Object.entries(reservedMappings).map(([k,v])=>[k,[...v]])),
+      layerSelected:layerSelected.map(set=>[...set])
+    };
+  }
+  currentTreeId=document.getElementById('tree-select').value||null;
+  const state=treeStates[currentTreeId];
+  if(state){
+    mappings={...state.mappings};
+    reservedMappings=Object.fromEntries(Object.entries(state.reservedMappings||{}).map(([k,v])=>[k,new Set(v)]));
+    layerSelected=(state.layerSelected||[]).map(items=>new Set(items));
+  }else if(lastTreeId){
+    mappings={};reservedMappings={};layerSelected=[new Set(),new Set(),new Set(),new Set(),new Set()];
+  }
+  lastTreeId=currentTreeId;
+  recomputeActiveLayers();renderCascade();renderPreview();
+}
+
+// ── 问卷搜索 ──
+function onSurveySearch(){
+  const q=document.getElementById('survey-search').value.trim().toLowerCase();
+  const results=document.getElementById('survey-results');
+  if(!q){results.style.display='none';return;}
+  const filtered=SURVEY_DB.filter(s=>s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q));
+  results.style.display=filtered.length?'block':'none';
+  results.innerHTML='';
+  if(!filtered.length){results.innerHTML='<div style="padding:10px;text-align:center;font-size:12px;color:var(--text3)">未找到匹配问卷</div>';results.style.display='block';return;}
+  filtered.slice(0,8).forEach(s=>{
+    const isAdded=selectedSurveys.find(x=>x.id===s.id);
+    const item=document.createElement('div');
+    item.className='survey-result-item'+(isAdded?' added':'');
+    item.innerHTML=`<span class="survey-result-name">${s.name}</span><span class="survey-result-meta">${s.code} · ${s.cnt}题</span>${!isAdded?'<button class="btn btn-sm btn-primary" style="margin-left:8px;flex-shrink:0">添加</button>':'<span style="font-size:11px;color:var(--text3);margin-left:8px">已添加</span>'}`;
+    if(!isAdded) item.querySelector('button').onclick=(e)=>{e.stopPropagation();addSurvey(s.id);document.getElementById('survey-search').value='';results.style.display='none';};
+    results.appendChild(item);
+  });
+}
+
+function addSurvey(id){
+  if(selectedSurveys.find(s=>s.id===id))return;
+  const sv=SURVEY_DB.find(s=>s.id===id);if(!sv)return;
+  selectedSurveys.push(sv);
+  activeSurveyId=id;
+  renderSurveyTags();
+  renderCascade();
+}
+
+function removeSurvey(id){
+  selectedSurveys=selectedSurveys.filter(s=>s.id!==id);
+  // 清除该问卷相关的映射和选中
+  const tree=SURVEY_TREE[id]||{};
+  const allQIds=new Set();
+  ['L1','L2','L3','L4','L5'].forEach(k=>{
+    const v=tree[k];
+    if(Array.isArray(v))v.forEach(q=>allQIds.add(q.id));
+    else if(v)Object.values(v).flat().forEach(q=>allQIds.add(q.id));
+  });
+  allQIds.forEach(qid=>{delete mappings[qid];delete reservedMappings[qid];layerSelected.forEach(s=>s.delete(qid));});
+  if(activeSurveyId===id)activeSurveyId=selectedSurveys[0]&&selectedSurveys[0].id;
+  recomputeActiveLayers();
+  renderSurveyTags();renderCascade();renderPreview();
+}
+
+function switchSurvey(id){
+  activeSurveyId=id;
+  recomputeActiveLayers();
+  renderSurveyTags();
+  renderCascade();
+}
+
+function renderSurveyTags(){
+  const wrap=document.getElementById('survey-tags');
+  wrap.innerHTML='';
+  if(!selectedSurveys.length){
+    wrap.innerHTML='<span style="font-size:12px;color:var(--text3)">搜索并添加问卷</span>';
+    return;
+  }
+  wrap.innerHTML=`<span class="survey-tag">已添加 ${selectedSurveys.length} 张问卷，请在左侧「问卷配置」列选择当前配置对象</span>`;
+}
+
+function renderSurveyConfigColumn(area){
+  const col=document.createElement('div');
+  col.className='survey-config-col';
+  col.innerHTML=`
+    <div class="survey-config-hdr">
+      <div>
+        <div class="survey-config-title">问卷配置</div>
+        <div class="survey-config-sub">选择一张问卷配置题目</div>
+      </div>
+      <span class="cc-sel-cnt">${selectedSurveys.length}张</span>
+    </div>
+    <div class="survey-config-body"></div>
+  `;
+  const body=col.querySelector('.survey-config-body');
+  selectedSurveys.forEach(s=>{
+    const progress=getSurveyProgress(s.id);
+    const card=document.createElement('div');
+    card.className='survey-config-card'+(s.id===activeSurveyId?' active':'');
+    card.onclick=()=>switchSurvey(s.id);
+    card.innerHTML=`
+      <div class="survey-config-main">
+        <div class="survey-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 3h7l3 3v15H7z"></path>
+            <path d="M14 3v4h4"></path>
+            <path d="M9 11h6"></path>
+            <path d="M9 15h6"></path>
+            <path d="M9 19h4"></path>
+          </svg>
+        </div>
+        <div class="survey-config-info">
+          <div class="survey-config-name">${s.name}</div>
+          <div class="survey-config-meta"><span>${s.code}</span><span>共 ${progress.total} 题</span></div>
+        </div>
+      </div>
+      <div class="survey-config-progress">
+        <span class="survey-progress-pill">已勾选 ${progress.selected} 题</span>
+        <span class="survey-progress-pill ${progress.mapped?'done':''}">已配置 ${progress.mapped} 题</span>
+      </div>
+      <button class="survey-config-remove" onclick="event.stopPropagation();removeSurvey('${s.id}')">移除问卷</button>
+    `;
+    body.appendChild(card);
+  });
+  const addBtn=document.createElement('button');
+  addBtn.className='add-survey-card';
+  addBtn.textContent='＋ 添加问卷';
+  addBtn.onclick=()=>{const input=document.getElementById('survey-search');input.focus();input.scrollIntoView({block:'center'});};
+  body.appendChild(addBtn);
+  area.appendChild(col);
+}
+
+// ── 级联列 ──
+function getQuestionsForLayer(lv){
+  const LV_KEYS=['L1','L2','L3','L4','L5'];
+  const key=LV_KEYS[lv];
+  const items=[];
+  const sv=getActiveSurvey();if(!sv)return items;
+  const si=selectedSurveys.findIndex(s=>s.id===sv.id);
+  const tree=SURVEY_TREE[sv.id];if(!tree)return items;
+  if(lv===0){
+    (tree.L1||[]).forEach(q=>items.push({...q,sid:sv.id,si}));
+  } else {
+    const prevSelected=layerSelected[lv-1];
+    const mapObj=tree[key]||{};
+    prevSelected.forEach(prevId=>{
+      (mapObj[prevId]||[]).forEach(q=>items.push({...q,sid:sv.id,si,srcId:prevId}));
+    });
+  }
+  return items;
+}
+
+function renderCascade(){
+  const area=document.getElementById('cascade-area');
+  area.innerHTML='';
+  if(!selectedSurveys.length){
+    area.innerHTML='<div style="padding:30px;font-size:13px;color:var(--text3);line-height:1.7;text-align:center;width:100%">先在上方选择问卷<br>再在此逐层配置题目与维度</div>';
+    return;
+  }
+  if(!activeSurveyId||!selectedSurveys.find(s=>s.id===activeSurveyId)){
+    activeSurveyId=selectedSurveys[0].id;
+  }
+  renderSurveyConfigColumn(area);
+
+  const LV_BADGES=['lv1-b','lv2-b','lv3-b','lv4-b','lv5-b'];
+  for(let lv=0;lv<activeLayers;lv++){
+    const col=document.createElement('div');
+    col.className='cascade-col';
+
+    const items=getQuestionsForLayer(lv);
+    const questionIds=new Set(items.map(q=>q.id));
+    const totalCnt=questionIds.size;
+    const configuredCnt=[...questionIds].filter(id=>mappings[id]||(reservedMappings[id]&&reservedMappings[id].size)).length;
+
+    // 列头
+    const hdr=document.createElement('div');
+    hdr.className='cc-hdr';
+    hdr.innerHTML=`
+      <div class="cc-hdr-left">
+        <span class="cc-lv-badge ${LV_BADGES[lv]}">${LV_NAMES[lv]}</span>
+        <span class="cc-hdr-name">题目选择</span>
+      </div>
+      <div class="cc-layer-progress"><span>共 ${totalCnt} 题，</span><span>已配置 ${configuredCnt} 题，</span><span>未配置 ${totalCnt-configuredCnt} 题</span></div>
+    `;
+    col.appendChild(hdr);
+
+    // 搜索
+    const srch=document.createElement('div');
+    srch.className='cc-search';
+    srch.innerHTML=`<input placeholder="搜索题目..." oninput="filterCol(this,${lv})"/>`;
+    col.appendChild(srch);
+
+    // 题目列表
+    const body=document.createElement('div');
+    body.className='cc-body';
+    body.id=`cc-body-${lv}`;
+
+    if(items.length===0){
+      body.innerHTML=lv===0?'<div class="cc-empty">已选问卷中暂无题目</div>':`<div class="cc-empty">请先在${LV_NAMES[lv-1]}选择题目</div>`;
+    } else {
+      function appendQuestion(q){
+        const isSelected=layerSelected[lv].has(q.id);
+        const nodeId=mappings[q.id];
+        const node=nodeId&&getTree()?findNode(getTree().nodes,nodeId):null;
+        const reserved=[...(reservedMappings[q.id]||[])];
+        const parentQ=lv>0&&q.srcId?findQuestionInSurvey(q.sid,q.srcId):null;
+        const triggerText=lv>0?getTriggerText(q,lv):'';
+        const survey=selectedSurveys.find(s=>s.id===q.sid);
+        const item=document.createElement('div');
+        item.className='q-item'+(isSelected?' selected':'');
+        item.dataset.qid=q.id;
+
+        item.innerHTML=`
+          <div class="q-meta"><span class="q-survey">${survey?survey.name:''}</span><span class="q-id">题目ID：${q.id}</span></div>
+          <div class="q-item-row">
+            <div class="q-chk"><span class="q-chk-mark">✓</span></div>
+            <span class="q-label" title="${q.val}">${q.val}</span>
+            <span class="q-type">${q.type}</span>
+          </div>
+          <div class="q-dim">
+            <span class="q-dim-arrow">↳</span>
+            ${node||reserved.length
+              ? `<span class="q-node-path">${node?`已选择-L${lv+1}-${node.label}`:`已选择-${reserved[0]}`}</span><button class="q-reselect" onclick="openModal('${q.id}',${lv},event)">重新选择</button>`
+              : `<button class="q-dim-btn" onclick="openModal('${q.id}',${lv},event)">配置维度</button>`
+            }
+          </div>
+          ${lv>0&&parentQ?`<div class="q-trigger"><span class="q-trigger-label">触发</span><span>条件：${triggerText}</span></div>`:''}
+        `;
+        item.querySelector('.q-chk').onclick=(e)=>{e.stopPropagation();toggleSelect(q.id,lv);};
+        item.querySelector('.q-label').onclick=(e)=>{e.stopPropagation();toggleSelect(q.id,lv);};
+        body.appendChild(item);
+      }
+
+      if(lv===0){
+        items.forEach(appendQuestion);
+      } else {
+        const groupedByParent={};
+        items.forEach(q=>{
+          const key=q.srcId||'unknown';
+          if(!groupedByParent[key])groupedByParent[key]=[];
+          groupedByParent[key].push(q);
+        });
+        Object.entries(groupedByParent).forEach(([parentId,qs])=>{
+          const parentQ=findQuestionInSurvey(qs[0].sid,parentId);
+          const source=document.createElement('div');
+          source.className='parent-source';
+          source.innerHTML=`<strong>来源父题</strong><span class="parent-source-title">${parentQ?parentQ.val:'未找到父题'}</span><span class="parent-source-id">题目ID：${parentId}</span>`;
+          body.appendChild(source);
+          qs.forEach(appendQuestion);
+        });
+      }
+    }
+    col.appendChild(body);
+    area.appendChild(col);
+  }
+
+
+}
+
+function filterCol(input,lv){
+  const q=input.value.trim().toLowerCase();
+  const body=document.getElementById(`cc-body-${lv}`);
+  if(!body)return;
+  body.querySelectorAll('.q-item').forEach(item=>{
+    const label=item.querySelector('.q-label');
+    if(!q||label.textContent.toLowerCase().includes(q)) item.style.display='';
+    else item.style.display='none';
+  });
+}
+
+function setQuestionLevel(qId, sel, e){
+  e.stopPropagation();
+  const val = sel.value;
+  if(val==='') { delete questionLevels[qId]; delete mappings[qId]; }
+  else { questionLevels[qId]=parseInt(val); delete mappings[qId]; }
+  // 更新 select 颜色
+  sel.className='q-lv-select'+(val?` set-lv${parseInt(val)+1}`:'');
+  renderCascade(); renderPreview();
+}
+
+function toggleSelect(qId,lv){
+  const wasSelected=layerSelected[lv].has(qId);
+  if(wasSelected){
+    if(!window.confirm('取消该题目会导致此题目的子题目全部清空，请确认。'))return;
+    layerSelected[lv].delete(qId);
+    const q=getQuestionsForLayer(lv).find(x=>x.id===qId);
+    delete mappings[qId];
+    delete reservedMappings[qId];
+    if(q){clearChildMappings(qId,lv,q.sid);clearChildSelections(qId,lv,q.sid);}
+  } else {
+    layerSelected[lv].add(qId);
+    recomputeActiveLayers();
+  }
+  recomputeActiveLayers();renderCascade();renderPreview();
+  if(!wasSelected)openModal(qId,lv);
+}
+
+// ── 模态 ──
+function openModal(qId,lv,e){
+  e&&e.stopPropagation();
+  const items=getQuestionsForLayer(lv);
+  const q=items.find(x=>x.id===qId);
+  modalPending={qId,lv,sid:q&&q.sid,srcId:q&&q.srcId};
+  modalPickedNodeId=mappings[qId]||null;
+  // 普通节点和系统保留节点属于同一组选项；兼容旧数据时普通节点优先。
+  pendingReserved=new Set(modalPickedNodeId?[]:[...(reservedMappings[qId]||[])].slice(0,1));
+  document.getElementById('modal-title').textContent='选择维度节点';
+  document.getElementById('modal-sub').innerHTML=q?`<div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:4px">${q.val}</div><div style="font-size:10px;color:var(--text3)">题目ID：${q.id} · 仅展示 ${LV_NAMES[lv]} 节点</div>`:'请选择与当前题目对应的维度节点';
+  const ms=document.getElementById('modal-search');
+  if(ms) ms.value='';
+  renderModalList();
+  renderModalDetail();
+  document.getElementById('modal').style.display='flex';
+  setTimeout(()=>{const ms=document.getElementById('modal-search');if(ms)ms.focus();},80);
+}
+
+function renderModalList(){
+  const list=document.getElementById('modal-list');
+  const searchEl=document.getElementById('modal-search');
+  const q=searchEl?searchEl.value.trim().toLowerCase():'';
+  list.innerHTML='';
+  const t=getTree();
+  if(!t){list.innerHTML='<div style="padding:12px;text-align:center;font-size:12px;color:var(--text3)">请先选择维度树</div>';return;}
+  if(!t.nodes||t.nodes.length===0){list.innerHTML='<div style="padding:16px;text-align:center;font-size:12px;color:var(--text3)">维度树暂无节点</div>';return;}
+  if(!window.mExp) window.mExp={};
+
+  // 搜索模式：展开所有匹配节点的路径
+  function nodeMatchesSearch(n){return !q||n.label.toLowerCase().includes(q);}
+  function subtreeHasMatch(n){return nodeMatchesSearch(n)||(n.children||[]).some(c=>subtreeHasMatch(c));}
+
+  function build(nodes, depth, container){
+    nodes.forEach(n=>{
+      if(q&&!subtreeHasMatch(n)) return;
+      const hasChildren=(n.children||[]).length>0;
+      if(window.mExp[n.id]===undefined) window.mExp[n.id]=true;
+      const isOpen = q ? true : window.mExp[n.id];
+      const isSel = n.id===modalPickedNodeId;
+      const matches = nodeMatchesSearch(n);
+
+      const wrap=document.createElement('div');
+
+      const row=document.createElement('div');
+      row.className='mli'+(isSel?' sel':'');
+      row.style.cssText=`
+        padding-left:${8+depth*18}px;
+        display:flex;align-items:center;gap:6px;
+        padding-top:7px;padding-right:10px;padding-bottom:7px;
+        cursor:pointer;border-radius:6px;margin:1px 4px;
+        transition:background .1s;
+        ${isSel?'background:var(--blue-light);':''}
+      `;
+
+      // 展开按钮
+      const expBtn=document.createElement('span');
+      expBtn.style.cssText=`width:16px;height:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;color:var(--text3);border-radius:3px;transition:transform .15s;transform:rotate(${isOpen?90:0}deg);visibility:${hasChildren?'visible':'hidden'}`;
+      expBtn.textContent='▶';
+      expBtn.onclick=(e)=>{e.stopPropagation();window.mExp[n.id]=!window.mExp[n.id];renderModalList();};
+
+      // 颜색 도트
+      const dot=document.createElement('div');
+      dot.style.cssText=`width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${t.color};opacity:${Math.max(0.3,1-depth*0.2)}`;
+
+      // 层级标签
+      const lvTag=document.createElement('span');
+      lvTag.className=LV_NODE_BADGES[n.depth]||'';
+      lvTag.style.cssText='font-size:10px;padding:1px 6px;border-radius:8px;flex-shrink:0;font-weight:500';
+      lvTag.textContent=['L1','L2','L3','L4','L5'][n.depth]||'';
+
+      // 节点名
+      const label=document.createElement('span');
+      label.style.cssText=`font-size:13px;flex:1;${isSel?'color:var(--blue);font-weight:500':''}`;
+      if(q&&matches){
+        // 高亮匹配文字
+        const idx=n.label.toLowerCase().indexOf(q);
+        label.innerHTML=n.label.slice(0,idx)
+          +`<mark style="background:#FEF9C3;color:#713F12;border-radius:2px;padding:0 1px">${n.label.slice(idx,idx+q.length)}</mark>`
+          +n.label.slice(idx+q.length);
+      } else {
+        label.textContent=n.label;
+      }
+
+      // 已选标记
+      if(isSel){
+        const chk=document.createElement('span');
+        chk.style.cssText='font-size:11px;color:var(--blue);flex-shrink:0;font-weight:500';
+        chk.textContent='✓';
+        row.appendChild(expBtn);row.appendChild(dot);row.appendChild(lvTag);row.appendChild(label);row.appendChild(chk);
+      } else {
+        row.appendChild(expBtn);row.appendChild(dot);row.appendChild(lvTag);row.appendChild(label);
+      }
+
+      row.onmouseenter=()=>{if(!isSel) row.style.background='var(--surface2)';};
+      row.onmouseleave=()=>{if(!isSel) row.style.background='';};
+      row.onclick=(e)=>{
+        if(e.target===expBtn||e.target.parentElement===expBtn) return;
+        modalPickedNodeId=n.id;
+        pendingReserved.clear();
+        renderModalList();renderModalDetail();
+      };
+
+      wrap.appendChild(row);
+
+      if(hasChildren&&isOpen){
+        const childWrap=document.createElement('div');
+        build(n.children,depth+1,childWrap);
+        wrap.appendChild(childWrap);
+      }
+      container.appendChild(wrap);
+    });
+  }
+
+  // 只展示目标层级节点
+  const targetLv=modalPending?modalPending.lv:0;
+  const allFlat=flatNodes(t.nodes);
+  const targetNodes=allFlat.filter(n=>n.depth===targetLv&&(!q||n.label.toLowerCase().includes(q)));
+  if(!targetNodes.length){
+    list.innerHTML=`<div style="padding:16px;text-align:center;font-size:12px;color:var(--text3);line-height:1.8">逻辑树第${['一','二','三','四','五'][targetLv]}层暂无节点<br><span style="font-size:11px">请先在树管理页为该层级添加节点</span></div>`;
+    return;
+  }
+  targetNodes.forEach(n=>{
+    const isSel=n.id===modalPickedNodeId;
+    const row=document.createElement('div');
+    row.className='mli'+(isSel?' sel':'');
+    row.style.cssText=`display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s;${isSel?'background:var(--blue-light);':''}`;
+    row.onmouseenter=()=>{if(!isSel)row.style.background='var(--surface2)';};
+    row.onmouseleave=()=>{if(!isSel)row.style.background='';};
+    const dot=document.createElement('div');
+    dot.style.cssText=`width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${t.color}`;
+    const lvTag=document.createElement('span');
+    lvTag.className=LV_NODE_BADGES[n.depth]||'';
+    lvTag.style.cssText='font-size:10px;padding:1px 6px;border-radius:8px;flex-shrink:0;font-weight:500';
+    lvTag.textContent=['L1','L2','L3','L4','L5'][n.depth]||'';
+    const lbl=document.createElement('span');
+    lbl.style.cssText=`font-size:13px;flex:1;${isSel?'color:var(--blue);font-weight:500':''}`;
+    if(q){const i2=n.label.toLowerCase().indexOf(q);lbl.innerHTML=n.label.slice(0,i2)+`<mark style="background:#FEF9C3;color:#713F12;border-radius:2px">${n.label.slice(i2,i2+q.length)}</mark>`+n.label.slice(i2+q.length);}
+    else{lbl.textContent=n.label;}
+    row.appendChild(dot);row.appendChild(lvTag);row.appendChild(lbl);
+    if(isSel){const chk=document.createElement('span');chk.style.cssText='font-size:11px;color:var(--blue);font-weight:500';chk.textContent='✓';row.appendChild(chk);}
+    row.onclick=()=>{modalPickedNodeId=n.id;pendingReserved.clear();renderModalList();renderModalDetail();};
+    list.appendChild(row);
+  });
+  renderModalDetail();
+}
+
+function renderModalDetail(){
+  document.querySelectorAll('.reserved-panel input').forEach(input=>{input.checked=pendingReserved.has(input.value);});
+  const pathEl=document.getElementById('modal-path');
+  const list=document.getElementById('modal-child-list');
+  if(!pathEl||!list)return;
+  const t=getTree();
+  const node=modalPickedNodeId&&t?findNode(t.nodes,modalPickedNodeId):null;
+  pathEl.textContent=node?`当前路径：${node.id} / ${getNodePathLabel(node.id)}`:'当前路径：请选择左侧节点';
+  list.innerHTML='';
+  if(!node){list.innerHTML='<div style="padding:18px;color:#999;font-size:11px">选择左侧节点后显示其子节点</div>';}
+  else if(!(node.children||[]).length){list.innerHTML='<div style="padding:18px;color:#999;font-size:11px">当前节点暂无子节点</div>';}
+  else node.children.forEach(child=>{
+    const row=document.createElement('div');row.className='modal-child-item';
+    row.innerHTML=`<span class="cc-lv-badge ${LV_NODE_BADGES[child.depth]||''}">L${child.depth+1}</span><span>${child.label}</span>`;
+    list.appendChild(row);
+  });
+}
+
+function toggleReserved(input){
+  if(!input.checked)return;
+  pendingReserved=new Set([input.value]);
+  modalPickedNodeId=null;
+  renderModalList();
+  renderModalDetail();
+}
+
+// 此页面仅配置题目与现有节点的关联，不维护逻辑树节点。
+function confirmModal(){
+  if(modalPending){
+    const qId=modalPending.qId;
+    const oldNodeId=mappings[qId]||null;
+    const oldReserved=[...(reservedMappings[qId]||[])][0]||null;
+    const pickedReserved=[...pendingReserved][0]||null;
+    if(!modalPickedNodeId&&!pickedReserved){
+      alert('请选择一个维度节点或系统保留节点');
+      return;
+    }
+    if(modalPickedNodeId){
+    const scope=getAllowedNodesForModal();
+    if(modalPending.lv>0&&!scope.nodes.some(n=>n.id===modalPickedNodeId)){
+      alert('请选择上一层维度的子维度');
+      return;
+    }
+      mappings[qId]=modalPickedNodeId;
+      delete reservedMappings[qId];
+    }else{
+      delete mappings[qId];
+      reservedMappings[qId]=new Set([pickedReserved]);
+    }
+    const oldChoice=oldNodeId?`node:${oldNodeId}`:(oldReserved?`reserved:${oldReserved}`:'');
+    const newChoice=modalPickedNodeId?`node:${modalPickedNodeId}`:`reserved:${pickedReserved}`;
+    if(oldChoice!==newChoice&&modalPending.lv<4&&modalPending.sid){
+      clearChildMappings(modalPending.qId,modalPending.lv,modalPending.sid);
+    }
+  }
+  closeModal();
+  renderCascade();renderPreview();
+}
+
+function closeModal(){
+  document.getElementById('modal').style.display='none';
+  modalPending=null;modalPickedNodeId=null;pendingReserved=new Set();
+}
+
+// ── 预览 ──
+function findQInfo(qid){
+  let foundQ=null,foundSv=null;
+  selectedSurveys.forEach((sv,si)=>{
+    const tree=SURVEY_TREE[sv.id];if(!tree)return;
+    ['L1','L2','L3','L4','L5'].forEach(k=>{
+      const v=tree[k];
+      const arr=Array.isArray(v)?v:Object.values(v||{}).flat();
+      const q=arr.find(x=>x.id===qid);
+      if(q&&!foundQ){foundQ=q;foundSv={...sv,si};}
+    });
+  });
+  return {foundQ,foundSv};
+}
+
+function renderPreview(){
+  const body=document.getElementById('preview-body');
+  body.innerHTML='';
+  const t=getTree();
+  if(!t){body.innerHTML='<div class="preview-empty-state">请先选择维度树</div>';return;}
+
+  const LV_COLORS=['background:#EEF2FF;color:#3730A3','background:#F0FDF4;color:#166534','background:#FFFBEB;color:#92400E','background:#FFF1F2;color:#9F1239','background:#F5F3FF;color:#5B21B6'];
+
+  const mappingByNode={};
+  Object.entries(mappings).forEach(([qid,nodeId])=>{
+    const {foundQ,foundSv}=findQInfo(qid);
+    if(!foundQ||!foundSv)return;
+    if(!mappingByNode[nodeId])mappingByNode[nodeId]=[];
+    mappingByNode[nodeId].push({qid,foundQ,foundSv,lv:getQuestionLevel(qid),path:getNodePathLabel(nodeId)});
+  });
+
+  const hasAnyMapping=Object.keys(mappingByNode).length>0;
+  if(!hasAnyMapping){
+    body.innerHTML='<div class="preview-empty-state">暂无维度映射，先为题目配置维度节点</div>';
+    return;
+  }
+
+  function nodeMappingCount(n){
+    let count=(mappingByNode[n.id]||[]).length;
+    (n.children||[]).forEach(c=>{count+=nodeMappingCount(c);});
+    return count;
+  }
+
+  const visibleNodes=[];
+  function collectVisible(n,parent){
+    const total=nodeMappingCount(n);
+    if(total===0)return;
+    visibleNodes.push({node:n,parent,total});
+    (n.children||[]).forEach(child=>collectVisible(child,n));
+  }
+  t.nodes.forEach(n=>collectVisible(n,null));
+
+  const byDepth=[[],[],[],[],[]];
+  visibleNodes.forEach(item=>{if(byDepth[item.node.depth])byDepth[item.node.depth].push(item);});
+
+  const treeWrap=document.createElement('div');
+  treeWrap.className='preview-tree';
+  const lineSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  lineSvg.classList.add('preview-lines');
+  treeWrap.appendChild(lineSvg);
+
+  function makeNodeCard(item){
+    const n=item.node;
+    const total=item.total;
+    const card=document.createElement('div');
+    card.className='preview-node-card';
+    card.dataset.nodeId=n.id;
+    const levelLabel=['L1','L2','L3','L4','L5'][n.depth]||'';
+    card.innerHTML=`
+      <div class="preview-node-row">
+        <span class="preview-level" style="${LV_COLORS[n.depth]||''}">${levelLabel}</span>
+        <span class="preview-node-name">${n.label}</span>
+        <span class="preview-count">${total}题</span>
+      </div>
+      <div class="preview-parent-note">父节点：${item.parent?item.parent.label:'无，根节点'}</div>
+    `;
+    const ownMappings=(mappingByNode[n.id]||[]).sort((a,b)=>{
+      const svA=selectedSurveys.findIndex(s=>s.id===a.foundSv.id);
+      const svB=selectedSurveys.findIndex(s=>s.id===b.foundSv.id);
+      return svA===svB?a.lv-b.lv:svA-svB;
+    });
+    if(ownMappings.length){
+      const list=document.createElement('div');
+      list.className='preview-map-list';
+      ownMappings.forEach(m=>{
+        const item=document.createElement('div');
+        item.className='preview-map-item';
+        const reserved=[...(reservedMappings[m.qid]||[])];
+        const fieldLabel=m.foundQ.type==='填空题'?'文字点':'文字选择';
+        item.innerHTML=`
+          <span class="preview-survey" title="${m.foundSv.name}">${m.foundSv.name}</span>
+          <span class="preview-question">${m.foundQ.val}</span>
+          <span class="preview-path">题目ID：${m.qid}</span>
+          <span class="preview-path">字段：${fieldLabel}${reserved.length?' · '+reserved.join('、'):''}</span>
+        `;
+        list.appendChild(item);
+      });
+      card.appendChild(list);
+    }
+    return card;
+  }
+
+  byDepth.forEach((items,depth)=>{
+    if(!items.length)return;
+    const col=document.createElement('div');
+    col.className='preview-tree-col';
+    col.innerHTML=`<div class="preview-col-title"><span class="preview-level" style="${LV_COLORS[depth]||''}">L${depth+1}</span><span>第${depth+1}层</span></div>`;
+    items.forEach(item=>col.appendChild(makeNodeCard(item)));
+    treeWrap.appendChild(col);
+  });
+  body.appendChild(treeWrap);
+
+  requestAnimationFrame(()=>{
+    const rect=treeWrap.getBoundingClientRect();
+    lineSvg.setAttribute('viewBox',`0 0 ${rect.width} ${rect.height}`);
+    lineSvg.setAttribute('width',rect.width);
+    lineSvg.setAttribute('height',rect.height);
+    lineSvg.innerHTML='';
+    visibleNodes.forEach(item=>{
+      if(!item.parent)return;
+      const from=treeWrap.querySelector(`[data-node-id="${item.parent.id}"]`);
+      const to=treeWrap.querySelector(`[data-node-id="${item.node.id}"]`);
+      if(!from||!to)return;
+      const a=from.getBoundingClientRect();
+      const b=to.getBoundingClientRect();
+      const x1=a.right-rect.left;
+      const y1=a.top-rect.top+a.height/2;
+      const x2=b.left-rect.left;
+      const y2=b.top-rect.top+b.height/2;
+      const mid=(x1+x2)/2;
+      const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d',`M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}`);
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke','#94A3B8');
+      path.setAttribute('stroke-width','1.5');
+      lineSvg.appendChild(path);
+    });
+  });
+}
+
+function removeMapping(qid){
+  delete mappings[qid];
+  renderCascade();renderPreview();
+}
+
+function saveAll(){
+  const btn=document.querySelector('.topbar-actions .btn-primary');
+  treeStates[currentTreeId]={
+    mappings:{...mappings},
+    reservedMappings:Object.fromEntries(Object.entries(reservedMappings).map(([k,v])=>[k,[...v]])),
+    layerSelected:layerSelected.map(set=>[...set])
+  };
+  btn.textContent='✓ 已保存';btn.style.background='#15803D';
+  setTimeout(()=>{btn.textContent='保存';btn.style.background='';},1500);
+}
+</script>
+<script src="../assets/js/association-export.js"></script>
+</div>
+</body>
+</html>
